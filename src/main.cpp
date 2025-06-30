@@ -1,105 +1,53 @@
-#include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>
+#include <Wire.h>
+#include <Adafruit_BME280.h>
 
-// Данные для подключения к Wi-Fi и токен бота
-#include "wifi_data.h"
-#include "token_bot.h"
-
-const unsigned long BOT_MTBS = 1000;
-const int LED_PIN = 2;
-
-WiFiClientSecure client;
-UniversalTelegramBot bot(TOKEN_BOT, client);
-unsigned long bot_lasttime = 0;
-
-void connectToWiFi() {
-  Serial.println("Подключение к Wi-Fi...");
-  
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  
-  Serial.print("SSID: ");
-  Serial.println(WIFI_SSID);
-  
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    attempts++;
-    
-    if (attempts > 30) { // 15 секунд
-      Serial.println("\nПревышено ожидание. Перезапуск соединения...");
-      delay(2000);
-      ESP.restart();
-    }
-  }
-  
-  Serial.println("\nУспешное подключение!");
-  Serial.print("IP адрес: ");
-  Serial.println(WiFi.localIP());
-}
-
-void handleNewMessages(int numNewMessages)
-{
-  for (int i = 0; i < numNewMessages; i++)
-  {
-    bot.sendMessage(bot.messages[i].chat_id, bot.messages[i].text, "New");
-
-    if (bot.messages[i].text == "/control") {
-      String keyboardJson = "[[\"/led_on\", \"/led_off\"]]";
-      bot.sendMessageWithReplyKeyboard(bot.messages[i].chat_id, "Выберите действие:", "", keyboardJson, true);
-}
-
-    if (bot.messages[i].text.equalsIgnoreCase("/led_on")) {
-      digitalWrite(LED_PIN, HIGH);
-      bot.sendMessage(bot.messages[i].chat_id, "Светодиод включен!");
-    }
-    else if (bot.messages[i].text.equalsIgnoreCase("/led_off")) {
-      digitalWrite(LED_PIN, LOW);
-      bot.sendMessage(bot.messages[i].chat_id, "Светодиод выключен!");
-    }
-  }
-}
+Adafruit_BME280 bme;
+const int SDA_PIN = 18;
+const int SCL_PIN = 19;
 
 void setup() {
   Serial.begin(115200);
-  delay(2000); // Время для инициализации
-  client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
-  pinMode(LED_PIN, OUTPUT);
-
-  connectToWiFi();
-
-  digitalWrite(LED_PIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_PIN, LOW);
+  delay(2000); // Даем время для инициализации
+  
+  // Инициализация I2C с указанием пинов
+  Wire.begin(SDA_PIN, SCL_PIN);
+  
+  Serial.println("BME280 Test");
+  
+  // Попробуем оба возможных адреса
+  if (!bme.begin(0x76, &Wire)) { // Первый вариант адреса
+    if (!bme.begin(0x77, &Wire)) { // Второй вариант адреса
+      Serial.println("Could not find BME280 sensor!");
+      while (1); // Бесконечный цикл при ошибке
+    } else {
+      Serial.println("BME280 found at 0x77");
+    }
+  } else {
+    Serial.println("BME280 found at 0x76");
+  }
+  
+  // Настройка параметров измерения
+  bme.setSampling(Adafruit_BME280::MODE_NORMAL,
+                  Adafruit_BME280::SAMPLING_X2,  // Температура
+                  Adafruit_BME280::SAMPLING_X16, // Давление
+                  Adafruit_BME280::SAMPLING_X1,  // Влажность
+                  Adafruit_BME280::FILTER_OFF,
+                  Adafruit_BME280::STANDBY_MS_0_5);
 }
 
 void loop() {
-  // Проверка соединения каждые 10 секунд. Необходимо в будущем поменять согласно будущему режиму сна и минимализации энергопотребления.
-  static unsigned long lastCheck = 0;
-  
-  if (millis() - lastCheck > 10000) {
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("Wi-Fi подключение активно");
-    } else {
-      Serial.println("Потеряно соединение Wi-Fi! Переподключение...");
-      WiFi.reconnect();
-    }
-    lastCheck = millis();
-  }
+  Serial.print("Temperature = ");
+  Serial.print(bme.readTemperature());
+  Serial.println(" °C");
 
-  if (millis() - bot_lasttime > BOT_MTBS)
-  {
-    int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+  Serial.print("Humidity = ");
+  Serial.print(bme.readHumidity());
+  Serial.println(" %");
 
-    while (numNewMessages){
-      Serial.println("got response");
-      handleNewMessages(numNewMessages);
-      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-    }
+  Serial.print("Pressure = ");
+  Serial.print(bme.readPressure() / 100.0F); // Переводим в гПа
+  Serial.println(" hPa");
 
-    bot_lasttime = millis();
-    Serial.println("Free heap: " + String(ESP.getFreeHeap()));
-  }
+  Serial.println("------------------");
+  delay(3000);
 }
