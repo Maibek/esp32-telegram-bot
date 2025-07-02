@@ -10,7 +10,7 @@
 #include "token_bot.h"
 
 const unsigned long BOT_MTBS = 1000;
-const int LED_PIN = 2;
+const int LED_PIN = 2; // Временная мера для отладки. В будущем это не нужно.
 const int SDA_PIN = 18;
 const int SCL_PIN = 19;
 
@@ -29,29 +29,36 @@ void connectToWiFi() {
   WiFi.disconnect(true);
   delay(1000);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  WiFi.setSleep(false); // Отключаем энергосбережение WiFi
-  
-  Serial.print("SSID: ");
-  Serial.println(WIFI_SSID);
+  WiFi.setSleep(false); // Отключение энергосбережения WiFi
   
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
+    Serial.print("Connect");
     Serial.print(".");
     attempts++;
     
     if (attempts > 30) {
-      Serial.println("\nПревышено ожидание. Перезапуск...");
+      Serial.println("Превышено ожидание. Подключение к мобильной точке доступа Wi-Fi...");
+      WiFi.disconnect(true);
       delay(2000);
-      ESP.restart();
+      // Подключение к точке резервной точке доступа, сейчас сделано на мой телефон.
+      WiFi.begin(WIFI_SSID_2, WIFI_PASS_2);
+      WiFi.setSleep(false);
+      if (attempts > 30) {
+        Serial.println("\nПревышено ожидание. Перезапуск...");
+        delay(2000);
+        ESP.restart();
+      }
     }
   }
   
-  Serial.println("\nУспешное подключение!");
+  Serial.println("\nУспешное подключение к точке доступа ");
+  Serial.print(WIFI_SSID);
   Serial.print("IP адрес: ");
   Serial.println(WiFi.localIP());
 
-  // Синхронизация времени для SSL
+  // Синхронизация времени для SSL. Временное решение, без него не всегда бот получает сообщения.
   configTime(0, 0, "pool.ntp.org");
   Serial.println("Ожидание синхронизации времени...");
   time_t now = time(nullptr);
@@ -68,11 +75,12 @@ void safe_sensor_read() {
     float t = htu.readTemperature();
     float h = htu.readHumidity();
     
-    Serial.print("Чтение датчика: T=");
+    Serial.print("Температура = ");
     Serial.print(t);
-    Serial.print(" H=");
-    Serial.println(h);
+    Serial.println("Влажность = ");
+    Serial.print(h);
     
+    // Проверка на корректность показаний датчика.
     if (!isnan(t)) last_temp = t;
     if (!isnan(h)) last_hum = h;
     
@@ -87,27 +95,22 @@ void handleNewMessages(int numNewMessages) {
     Serial.print("Текст: ");
     Serial.println(bot.messages[i].text);
 
+// В будущем надо сделать нормальные кнопки, без необходимости отправлять команду в бота. Так же необходимо удалять переписку, чтобы не захламлять бота.
     if (bot.messages[i].text == "/control") {
-      String keyboardJson = "[[\"/Meteo Structor\", \"/Meteo Nicobarensis\"]]";
+      String keyboardJson = "[[\"Meteo Structor\", \"Meteo Nicobarensis\"]]";
       bot.sendMessageWithReplyKeyboard(bot.messages[i].chat_id, "Выберите действие:", "", keyboardJson, true);
     }
-    if (bot.messages[i].text.equalsIgnoreCase("/Meteo Structor")) {
+    if (bot.messages[i].text.equalsIgnoreCase("Meteo Structor")) {
       
-      String message = "Климат у Structor";
-      
-      if (!isnan(last_temp)) {
-        message += "\nТемпература: " + String(last_temp, 2) + " C";
-      }
-      
-      if (!isnan(last_hum)) {
-        message += "\nВлажность: " + String(last_hum, 2) + " %";
-      }
+      String message = "Климат у Structor:";
+      message += "\nТемпература: " + String(last_temp, 2) + " C";
+      message += "\nВлажность: " + String(last_hum, 2) + " %";      
       
       bot.sendMessage(bot.messages[i].chat_id, message);
     }
-    else if (bot.messages[i].text.equalsIgnoreCase("/Meteo Nicobarensis")) {
+    else if (bot.messages[i].text.equalsIgnoreCase("Meteo Nicobarensis")) {
+      String message = "Заглушка";
       // Пока заглушка. После реализации подключения нескольких датчиков, необходимо будет подправить закоментирвоанный код
-      String message = "Заглушка";      
       // String message = "Климат у Nicobarensis";      
       // if (!isnan(last_temp)) {
       //   message += "\nТемпература: " + String(last_temp, 2) + " C";
@@ -125,10 +128,10 @@ void setup() {
   delay(2000);
   
   Wire.begin(SDA_PIN, SCL_PIN);
-  Wire.setTimeOut(250); // Таймаут I2C
+  Wire.setTimeOut(250); // Таймаут I2C. Без него датчик не всегда успевает инициализироваться.
   
   client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
-  pinMode(LED_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT); // Временная мера для отладки. В будущем это не нужно.
 
   Serial.println("Инициализация датчика...");
   if (!htu.begin(&Wire)) {
@@ -138,10 +141,6 @@ void setup() {
   }
 
   connectToWiFi();
-
-  digitalWrite(LED_PIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_PIN, LOW);
 }
 
 void loop() {
@@ -158,7 +157,7 @@ void loop() {
     lastCheck = millis();
   }
 
-  // Обработка сообщений Telegram
+  // Обработка сообщений Telegram. В будущем лучше реализовать webhook. Так как иногда бот не сбрасывает значения сообщений и начинает спамить в ответ на запрос.
   if (millis() - bot_lasttime > BOT_MTBS) {
     Serial.println("Проверка сообщений Telegram...");
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
@@ -167,7 +166,8 @@ void loop() {
       Serial.println("Найдено сообщений: " + String(numNewMessages));
       handleNewMessages(numNewMessages);
     }
-
+    
+    // Нужно для отладки. После окончания проекта можно будет удалить.
     bot_lasttime = millis();
     Serial.println("Свободная память: " + String(ESP.getFreeHeap()));
   }
