@@ -38,26 +38,18 @@ void connectToWiFi() {
     attempts++;
     
     if (attempts > 30) {
-      Serial.println("Превышено ожидание. Подключение к мобильной точке доступа Wi-Fi...");
-      WiFi.disconnect(true);
+      Serial.println("\nПревышено ожидание. Перезапуск...");
       delay(2000);
-      // Подключение к точке резервной точке доступа, сейчас сделано на мой телефон.
-      WiFi.begin(WIFI_SSID_2, WIFI_PASS_2);
-      WiFi.setSleep(false);
-      if (attempts > 30) {
-        Serial.println("\nПревышено ожидание. Перезапуск...");
-        delay(2000);
-        ESP.restart();
-      }
+      ESP.restart();
     }
   }
   
-  Serial.print("\nУспешное подключение к точке доступа ");
+  Serial.println("\nУспешное подключение к точке доступа ");
   Serial.println(WIFI_SSID);
   Serial.print("IP адрес: ");
   Serial.println(WiFi.localIP());
 
-  // Синхронизация времени для SSL
+  // Синхронизация времени для SSL. Временное решение, без него не всегда бот получает сообщения. Необходимо подумать. Иногда синхронизация не проходит, возможно сделать асинхронную синхронизацию.
   configTime(0, 0, "pool.ntp.org");
   Serial.println("Ожидание синхронизации времени...");
   time_t now = time(nullptr);
@@ -77,8 +69,9 @@ void safe_sensor_read() {
     Serial.print("Температура = ");
     Serial.println(t);
     Serial.print("Влажность = ");
-    Serial.print(h);
+    Serial.println(h);
     
+    // Проверка на корректность показаний датчика.
     if (!isnan(t)) last_temp = t;
     if (!isnan(h)) last_hum = h;
     
@@ -93,16 +86,21 @@ void handleNewMessages(int numNewMessages) {
     Serial.print("Текст: ");
     Serial.println(bot.messages[i].text);
 
+// В будущем надо сделать нормальные кнопки, без необходимости отправлять команду в бота. Так же необходимо удалять переписку, чтобы не захламлять бота.
     if (bot.messages[i].text == "/control") {
       String keyboardJson = "[[\"/Meteo Structor\", \"/Meteo Nicobarensis\"]]";
       bot.sendMessageWithReplyKeyboard(bot.messages[i].chat_id, "Выберите действие:", "", keyboardJson, true);
     }
     if (bot.messages[i].text.equalsIgnoreCase("/Meteo Structor")) {
       
-      String message = "Климат у Structor:";
-      message += "\nТемпература: " + String(last_temp, 2) + " C";
-      message += "\nВлажность: " + String(last_hum, 2) + " %";      
-      
+      String message = "Климат у Structor";      
+      if (!isnan(last_temp)) {
+        message += "\nТемпература: " + String(last_temp, 2) + " C";
+      }
+      if (!isnan(last_hum)) {
+        message += "\nВлажность: " + String(last_hum, 2) + " %";
+      }
+
       bot.sendMessage(bot.messages[i].chat_id, message);
     }
     else if (bot.messages[i].text.equalsIgnoreCase("/Meteo Nicobarensis")) {
@@ -138,6 +136,10 @@ void setup() {
   }
 
   connectToWiFi();
+  // Для диагностики, в будущем убрать.
+  digitalWrite(LED_PIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_PIN, LOW);
 }
 
 void loop() {
@@ -163,7 +165,7 @@ void loop() {
       Serial.println("Найдено сообщений: " + String(numNewMessages));
       handleNewMessages(numNewMessages);
     }
-
+    
     // Нужно для отладки. После окончания проекта можно будет удалить.
     bot_lasttime = millis();
     Serial.println("Свободная память: " + String(ESP.getFreeHeap()));
