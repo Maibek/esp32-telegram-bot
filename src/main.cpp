@@ -34,7 +34,6 @@ void connectToWiFi() {
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print("Connect");
     Serial.print(".");
     attempts++;
     
@@ -53,12 +52,12 @@ void connectToWiFi() {
     }
   }
   
-  Serial.println("\nУспешное подключение к точке доступа ");
-  Serial.print(WIFI_SSID);
+  Serial.print("\nУспешное подключение к точке доступа ");
+  Serial.println(WIFI_SSID);
   Serial.print("IP адрес: ");
   Serial.println(WiFi.localIP());
 
-  // Синхронизация времени для SSL. Временное решение, без него не всегда бот получает сообщения.
+  // Синхронизация времени для SSL
   configTime(0, 0, "pool.ntp.org");
   Serial.println("Ожидание синхронизации времени...");
   time_t now = time(nullptr);
@@ -76,11 +75,10 @@ void safe_sensor_read() {
     float h = htu.readHumidity();
     
     Serial.print("Температура = ");
-    Serial.print(t);
-    Serial.println("Влажность = ");
+    Serial.println(t);
+    Serial.print("Влажность = ");
     Serial.print(h);
     
-    // Проверка на корректность показаний датчика.
     if (!isnan(t)) last_temp = t;
     if (!isnan(h)) last_hum = h;
     
@@ -95,12 +93,11 @@ void handleNewMessages(int numNewMessages) {
     Serial.print("Текст: ");
     Serial.println(bot.messages[i].text);
 
-// В будущем надо сделать нормальные кнопки, без необходимости отправлять команду в бота. Так же необходимо удалять переписку, чтобы не захламлять бота.
     if (bot.messages[i].text == "/control") {
-      String keyboardJson = "[[\"Meteo Structor\", \"Meteo Nicobarensis\"]]";
+      String keyboardJson = "[[\"/Meteo Structor\", \"/Meteo Nicobarensis\"]]";
       bot.sendMessageWithReplyKeyboard(bot.messages[i].chat_id, "Выберите действие:", "", keyboardJson, true);
     }
-    if (bot.messages[i].text.equalsIgnoreCase("Meteo Structor")) {
+    if (bot.messages[i].text.equalsIgnoreCase("/Meteo Structor")) {
       
       String message = "Климат у Structor:";
       message += "\nТемпература: " + String(last_temp, 2) + " C";
@@ -108,7 +105,7 @@ void handleNewMessages(int numNewMessages) {
       
       bot.sendMessage(bot.messages[i].chat_id, message);
     }
-    else if (bot.messages[i].text.equalsIgnoreCase("Meteo Nicobarensis")) {
+    else if (bot.messages[i].text.equalsIgnoreCase("/Meteo Nicobarensis")) {
       String message = "Заглушка";
       // Пока заглушка. После реализации подключения нескольких датчиков, необходимо будет подправить закоментирвоанный код
       // String message = "Климат у Nicobarensis";      
@@ -166,7 +163,7 @@ void loop() {
       Serial.println("Найдено сообщений: " + String(numNewMessages));
       handleNewMessages(numNewMessages);
     }
-    
+
     // Нужно для отладки. После окончания проекта можно будет удалить.
     bot_lasttime = millis();
     Serial.println("Свободная память: " + String(ESP.getFreeHeap()));
