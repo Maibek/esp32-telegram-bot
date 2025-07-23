@@ -11,17 +11,25 @@
 
 const unsigned long BOT_MTBS = 1000;
 const int LED_PIN = 2; // Временная мера для отладки. В будущем это не нужно.
-const int SDA_PIN = 18;
-const int SCL_PIN = 19;
+const int SDA0_PIN = 18;
+const int SCL0_PIN = 19;
+const int SDA1_PIN = 22;
+const int SCL1_PIN = 23;
 
-Adafruit_HTU21DF htu = Adafruit_HTU21DF();
+extern TwoWire Wire;
+extern TwoWire Wire1;
+
+Adafruit_HTU21DF sensor0;
+Adafruit_HTU21DF sensor1;
 WiFiClientSecure client;
 UniversalTelegramBot bot(TOKEN_BOT, client);
 unsigned long bot_lasttime = 0;
 
 // Глобальные переменные для показаний датчика
-float last_temp = NAN;
-float last_hum = NAN;
+float last_temp0 = NAN;
+float last_hum0 = NAN;
+float last_temp1 = NAN;
+float last_hum1 = NAN;
 unsigned long last_sensor_read = 0;
 
 void connectToWiFi() {
@@ -63,17 +71,29 @@ void connectToWiFi() {
 
 void safe_sensor_read() {
   if (millis() - last_sensor_read > 5000) {
-    float t = htu.readTemperature();
-    float h = htu.readHumidity();
+    // Чтение первого датчика
+    float t0 = sensor0.readTemperature();
+    float h0 = sensor0.readHumidity();
     
-    Serial.print("Температура = ");
-    Serial.println(t);
-    Serial.print("Влажность = ");
-    Serial.println(h);
+    // Чтение второго датчика
+    float t1 = sensor1.readTemperature();
+    float h1 = sensor1.readHumidity();
     
-    // Проверка на корректность показаний датчика.
-    if (!isnan(t)) last_temp = t;
-    if (!isnan(h)) last_hum = h;
+    Serial.print("Датчик 0: Температура = ");
+    Serial.print(t0);
+    Serial.print(", Влажность = ");
+    Serial.println(h0);
+    
+    Serial.print("Датчик 1: Температура = ");
+    Serial.print(t1);
+    Serial.print(", Влажность = ");
+    Serial.println(h1);
+    
+    // Сохранение корректных значений
+    if (!isnan(t0)) last_temp0 = t0;
+    if (!isnan(h0)) last_hum0 = h0;
+    if (!isnan(t1)) last_temp1 = t1;
+    if (!isnan(h1)) last_hum1 = h1;
     
     last_sensor_read = millis();
   }
@@ -92,27 +112,24 @@ void handleNewMessages(int numNewMessages) {
       bot.sendMessageWithReplyKeyboard(bot.messages[i].chat_id, "Выберите действие:", "", keyboardJson, true);
     }
     if (bot.messages[i].text.equalsIgnoreCase("/Meteo Structor")) {
-      
-      String message = "Климат у Structor";      
-      if (!isnan(last_temp)) {
-        message += "\nТемпература: " + String(last_temp, 2) + " C";
+      String message = "Климат у Structor\n";      
+      if (!isnan(last_temp0)) {
+        message += "Температура: " + String(last_temp0, 2) + " °C\n";
       }
-      if (!isnan(last_hum)) {
-        message += "\nВлажность: " + String(last_hum, 2) + " %";
+      if (!isnan(last_hum0)) {
+        message += "Влажность: " + String(last_hum0, 2) + " %";
       }
-
       bot.sendMessage(bot.messages[i].chat_id, message);
     }
+    // Команда для второго датчика
     else if (bot.messages[i].text.equalsIgnoreCase("/Meteo Nicobarensis")) {
-      String message = "Заглушка";
-      // Пока заглушка. После реализации подключения нескольких датчиков, необходимо будет подправить закоментирвоанный код
-      // String message = "Климат у Nicobarensis";      
-      // if (!isnan(last_temp)) {
-      //   message += "\nТемпература: " + String(last_temp, 2) + " C";
-      // }      
-      // if (!isnan(last_hum)) {
-      //   message += "\nВлажность: " + String(last_hum, 2) + " %";
-      // }      
+      String message = "Климат у Nicobarensis\n";      
+      if (!isnan(last_temp1)) {
+        message += "Температура: " + String(last_temp1, 2) + " °C\n";
+      }
+      if (!isnan(last_hum1)) {
+        message += "Влажность: " + String(last_hum1, 2) + " %";
+      }
       bot.sendMessage(bot.messages[i].chat_id, message);
     }
   }
@@ -122,17 +139,31 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
   
-  Wire.begin(SDA_PIN, SCL_PIN);
+  Wire.begin(SDA0_PIN, SCL0_PIN);
   Wire.setTimeOut(250); // Таймаут I2C. Без него датчик не всегда успевает инициализироваться.
   
   client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
   pinMode(LED_PIN, OUTPUT); // Временная мера для отладки. В будущем это не нужно.
 
-  Serial.println("Инициализация датчика...");
-  if (!htu.begin(&Wire)) {
-    Serial.println("Ошибка инициализации HTU21DF!");
+  Wire.begin(SDA0_PIN, SCL0_PIN);
+  Wire.setTimeOut(250);
+  
+  // Инициализация второй шины I2C
+  Wire1.begin(SDA1_PIN, SCL1_PIN);
+  Wire1.setTimeOut(250);
+
+  // Инициализация датчика 0 на первой шине
+  if (!sensor0.begin(&Wire)) {
+    Serial.println("Ошибка инициализации HTU21DF #0!");
   } else {
-    Serial.println("HTU21DF инициализирован");
+    Serial.println("HTU21DF #0 инициализирован");
+  }
+
+  // Инициализация датчика 1 на второй шине
+  if (!sensor1.begin(&Wire1)) {
+    Serial.println("Ошибка инициализации HTU21DF #1!");
+  } else {
+    Serial.println("HTU21DF #1 инициализирован");
   }
 
   connectToWiFi();
