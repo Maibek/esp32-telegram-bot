@@ -32,6 +32,9 @@ float last_temp1 = NAN;
 float last_hum1 = NAN;
 unsigned long last_sensor_read = 0;
 
+void sendMainMenu(String chat_id);
+void sendStatus(String chat_id);
+
 void connectToWiFi() {
   Serial.println("Подключение к Wi-Fi...");
   WiFi.disconnect(true);
@@ -99,38 +102,110 @@ void safe_sensor_read() {
   }
 }
 
+void sendMainMenu(String chat_id) {
+  // Главное меню с inline-кнопками
+  String keyboardJson = R"([
+    [{"text": "🐜 Данные Structor", "callback_data": "/meteo_structor"}],
+    [{"text": "🐜 Данные Nicobarensis", "callback_data": "/meteo_nicobarensis"}],
+    [{"text": "ℹ️ Статус системы", "callback_data": "/status"}, {"text": "🔄 Обновить", "callback_data": "/update"}]
+  ])";
+  
+  bot.sendMessageWithInlineKeyboard(chat_id, "Выберите действие:", "", keyboardJson);
+}
+
+void sendStatus(String chat_id) {
+  String status = "🖥️ *Статус системы*\n";
+  status += "Сигнал: " + String(WiFi.RSSI()) + " dBm\n";
+  status += "Память: " + String(ESP.getFreeHeap() / 1024.0, 1) + " KB свободно\n";
+  status += "Аптайм: " + String(millis() / 1000 / 60) + " минут\n";
+  status += "🐜 *Климат у Structor*\n";
+  status += "Температура: " + String(last_temp0, 2) + " °C\n";
+  status += "Влажность: " + String(last_hum0, 2) + " %\n";
+  status += "🐜 *Климат у Nicobarensis*\n";      
+  status += "Температура: " + String(last_temp1, 2) + " °C\n";
+  status += "Влажность: " + String(last_hum1, 2) + " %";
+  
+  bot.sendMessage(chat_id, status, "Markdown");
+}
+
+
 void handleNewMessages(int numNewMessages) {
   for (int i = 0; i < numNewMessages; i++) {
-    Serial.print("Обработка сообщения от: ");
-    Serial.println(bot.messages[i].chat_id);
-    Serial.print("Текст: ");
-    Serial.println(bot.messages[i].text);
+    String chat_id = String(bot.messages[i].chat_id);
+    String text = bot.messages[i].text;
+    String from_name = bot.messages[i].from_name;
+    
+    // Отладочная информация
+    Serial.print("Получено сообщение от ");
+    Serial.print(from_name);
+    Serial.print(" (");
+    Serial.print(chat_id);
+    Serial.print("): ");
+    Serial.println(text);
 
-// В будущем надо сделать нормальные кнопки, без необходимости отправлять команду в бота. Так же необходимо удалять переписку, чтобы не захламлять бота.
-    if (bot.messages[i].text == "/control") {
-      String keyboardJson = "[[\"/Meteo Structor\", \"/Meteo Nicobarensis\"]]";
-      bot.sendMessageWithReplyKeyboard(bot.messages[i].chat_id, "Выберите действие:", "", keyboardJson, true);
+    // Обработка команды /start
+    if (text == "/start") {
+      String welcome = "Привет, " + from_name + "!\n";
+      welcome += "Я бот для мониторинга микроклимата.\n";
+      welcome += "Используй меню ниже для получения данных.";
+      bot.sendMessage(chat_id, welcome);
+      sendMainMenu(chat_id);
+      continue;
     }
-    if (bot.messages[i].text.equalsIgnoreCase("/Meteo Structor")) {
-      String message = "Климат у Structor\n";      
-      if (!isnan(last_temp0)) {
-        message += "Температура: " + String(last_temp0, 2) + " °C\n";
-      }
-      if (!isnan(last_hum0)) {
-        message += "Влажность: " + String(last_hum0, 2) + " %";
-      }
-      bot.sendMessage(bot.messages[i].chat_id, message);
+
+    // Обработка команд (без callback префикса)
+    if (text.equalsIgnoreCase("/meteo_structor")) {
+      String message = "🐜 *Климат у Structor*\n";      
+      if (!isnan(last_temp0)) message += "Температура: " + String(last_temp0, 2) + " °C\n";
+      if (!isnan(last_hum0)) message += "Влажность: " + String(last_hum0, 2) + " %";
+      bot.sendMessage(chat_id, message, "Markdown");
     }
-    // Команда для второго датчика
-    else if (bot.messages[i].text.equalsIgnoreCase("/Meteo Nicobarensis")) {
-      String message = "Климат у Nicobarensis\n";      
-      if (!isnan(last_temp1)) {
-        message += "Температура: " + String(last_temp1, 2) + " °C\n";
+    else if (text.equalsIgnoreCase("/meteo_nicobarensis")) {
+      String message = "🐜 *Климат у Nicobarensis*\n";      
+      if (!isnan(last_temp1)) message += "Температура: " + String(last_temp1, 2) + " °C\n";
+      if (!isnan(last_hum1)) message += "Влажность: " + String(last_hum1, 2) + " %";
+      bot.sendMessage(chat_id, message, "Markdown");
+    }
+    else if (text.equalsIgnoreCase("/status")) {
+      sendStatus(chat_id);
+    }
+    else if (text.equalsIgnoreCase("/update")) {
+      bot.sendMessage(chat_id, "Данные обновлены!");
+      sendMainMenu(chat_id);
+    }
+    else if (text.equalsIgnoreCase("/help")) {
+      sendMainMenu(chat_id);
+    }
+    // Обработка callback-запросов
+    else if (text.startsWith("/cb")) {
+      String command = text.substring(3); // Удаляем префикс /cb
+      command.trim();
+      
+      if (command.equalsIgnoreCase("/meteo_structor")) {
+        String message = "🐜 *Климат у Structor*\n";      
+        if (!isnan(last_temp0)) message += "Температура: " + String(last_temp0, 2) + " °C\n";
+        if (!isnan(last_hum0)) message += "Влажность: " + String(last_hum0, 2) + " %";
+        bot.sendMessage(chat_id, message, "Markdown");
       }
-      if (!isnan(last_hum1)) {
-        message += "Влажность: " + String(last_hum1, 2) + " %";
+      else if (command.equalsIgnoreCase("/meteo_nicobarensis")) {
+        String message = "🐜 *Климат у Nicobarensis*\n";      
+        if (!isnan(last_temp1)) message += "Температура: " + String(last_temp1, 2) + " °C\n";
+        if (!isnan(last_hum1)) message += "Влажность: " + String(last_hum1, 2) + " %";
+        bot.sendMessage(chat_id, message, "Markdown");
       }
-      bot.sendMessage(bot.messages[i].chat_id, message);
+      else if (command.equalsIgnoreCase("/status")) {
+        sendStatus(chat_id);
+      }
+      else if (command.equalsIgnoreCase("/update")) {
+        bot.sendMessage(chat_id, "Данные обновлены!");
+        sendMainMenu(chat_id);
+      }
+    }
+    else {
+      // Неизвестная команда
+      String response = "Неизвестная команда: " + text + "\n";
+      response += "Используй /help для вызова меню";
+      bot.sendMessage(chat_id, response);
     }
   }
 }
