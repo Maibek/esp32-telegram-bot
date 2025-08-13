@@ -8,6 +8,16 @@
 // Данные для подключения к Wi-Fi и токен бота
 #include "wifi_data.h"
 #include "token_bot.h"
+#include "ID.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+uint8_t temprature_sens_read();  // Объявление функции из SDK
+#ifdef __cplusplus
+}
+#endif
+
 
 const unsigned long BOT_MTBS = 1000;
 const int LED_PIN = 2; // Временная мера для отладки. В будущем это не нужно.
@@ -97,6 +107,12 @@ void safe_sensor_read() {
     if (!isnan(h0)) last_hum0 = h0;
     if (!isnan(t1)) last_temp1 = t1;
     if (!isnan(h1)) last_hum1 = h1;
+
+    // Сохранение не корректных значений
+    if (isnan(t0)) last_temp0 = NAN;
+    if (isnan(h0)) last_hum0 = NAN;
+    if (isnan(t1)) last_temp1 = NAN;
+    if (isnan(h1)) last_hum1 = NAN;
     
     last_sensor_read = millis();
   }
@@ -118,6 +134,7 @@ void sendStatus(String chat_id) {
   status += "Сигнал: " + String(WiFi.RSSI()) + " dBm\n";
   status += "Память: " + String(ESP.getFreeHeap() / 1024.0, 1) + " KB свободно\n";
   status += "Аптайм: " + String(millis() / 1000 / 60) + " минут\n";
+  status += "Температура ядра: " + String((temprature_sens_read() - 32) / 1.8f) + " °C\n";
   status += "🐜 *Климат у Structor*\n";
   status += "Температура: " + String(last_temp0, 2) + " °C\n";
   status += "Влажность: " + String(last_hum0, 2) + " %\n";
@@ -156,14 +173,14 @@ void handleNewMessages(int numNewMessages) {
     // Обработка команд (без callback префикса)
     if (text.equalsIgnoreCase("/meteo_structor")) {
       String message = "🐜 *Климат у Structor*\n";      
-      if (!isnan(last_temp0)) message += "Температура: " + String(last_temp0, 2) + " °C\n";
-      if (!isnan(last_hum0)) message += "Влажность: " + String(last_hum0, 2) + " %";
+      message += "Температура: " + String(last_temp0, 2) + " °C\n";
+      message += "Влажность: " + String(last_hum0, 2) + " %";
       bot.sendMessage(chat_id, message, "Markdown");
     }
     else if (text.equalsIgnoreCase("/meteo_nicobarensis")) {
       String message = "🐜 *Климат у Nicobarensis*\n";      
-      if (!isnan(last_temp1)) message += "Температура: " + String(last_temp1, 2) + " °C\n";
-      if (!isnan(last_hum1)) message += "Влажность: " + String(last_hum1, 2) + " %";
+      message += "Температура: " + String(last_temp1, 2) + " °C\n";
+      message += "Влажность: " + String(last_hum1, 2) + " %";
       bot.sendMessage(chat_id, message, "Markdown");
     }
     else if (text.equalsIgnoreCase("/status")) {
@@ -183,14 +200,14 @@ void handleNewMessages(int numNewMessages) {
       
       if (command.equalsIgnoreCase("/meteo_structor")) {
         String message = "🐜 *Климат у Structor*\n";      
-        if (!isnan(last_temp0)) message += "Температура: " + String(last_temp0, 2) + " °C\n";
-        if (!isnan(last_hum0)) message += "Влажность: " + String(last_hum0, 2) + " %";
+        message += "Температура: " + String(last_temp0, 2) + " °C\n";
+        message += "Влажность: " + String(last_hum0, 2) + " %";
         bot.sendMessage(chat_id, message, "Markdown");
       }
       else if (command.equalsIgnoreCase("/meteo_nicobarensis")) {
         String message = "🐜 *Климат у Nicobarensis*\n";      
-        if (!isnan(last_temp1)) message += "Температура: " + String(last_temp1, 2) + " °C\n";
-        if (!isnan(last_hum1)) message += "Влажность: " + String(last_hum1, 2) + " %";
+        message += "Температура: " + String(last_temp1, 2) + " °C\n";
+        message += "Влажность: " + String(last_hum1, 2) + " %";
         bot.sendMessage(chat_id, message, "Markdown");
       }
       else if (command.equalsIgnoreCase("/status")) {
@@ -207,6 +224,95 @@ void handleNewMessages(int numNewMessages) {
       response += "Используй /help для вызова меню";
       bot.sendMessage(chat_id, response);
     }
+  }
+}
+
+void alarm_high_temp(String CHAT_ID){
+  static bool alerthighSent0 = false;
+  static bool alerthighSent1 = false;
+
+  if (!alerthighSent0){
+    if(last_temp0 > 30){
+      String message = "⚠️ Тревога\n";
+      message += "Высокая температура у Structor!";
+      message += "Текущая температура: " + String(last_temp0, 1) + "°C\n";
+      alerthighSent0 = true;
+    }
+  }
+  else {
+    alerthighSent0 = false;
+  }
+
+  if (!alerthighSent1){
+    if(last_temp1 > 30){
+      String message = "⚠️ Тревога!\n";
+      message += "Высокая температура у Nicobarensis!";
+      message += "Текущая температура: " + String(last_temp1, 1) + "°C\n";
+      bot.sendMessage(CHAT_ID, message, "");
+      alerthighSent1 = true;
+    }
+  }
+    else {
+    alerthighSent1 = false;
+  }
+
+}
+
+void alarm_low_temp(){
+  static bool alertlowSent0 = false;
+  static bool alertlowSent1 = false;
+
+  if (!alertlowSent0){
+    if(last_temp0 < 24){
+      String message = "⚠️ Тревога\n";
+      message += "Низкая температура у Structor!";
+      message += "Текущая температура: " + String(last_temp0, 1) + "°C\n";
+      bot.sendMessage(CHAT_ID, message, "");
+      alertlowSent0 = true;
+    }
+  }
+  else {
+    alertlowSent0 = false;
+  }
+
+  if (!alertlowSent1){
+    if(last_temp1 < 24){
+      String message = "⚠️ Тревога!\n";
+      message += "Низкая температура у Nicobarensis!";
+      message += "Текущая температура: " + String(last_temp1, 1) + "°C\n";
+      bot.sendMessage(CHAT_ID, message, "");
+      alertlowSent1 = true;
+    }
+  }
+    else {
+    alertlowSent1 = false;
+  }
+
+}
+
+void chekSensors(){
+  static bool errorSent0 = false;
+  static bool errorSent1 = false;
+  if (isnan(last_temp0) || isnan(last_hum0)){
+    if (!errorSent0){
+      String message = "Датчик у Structor не исправен\n";
+      bot.sendMessage(CHAT_ID, message, "");
+      errorSent0 = true;
+    }
+  }
+  else{
+    errorSent0 = false;
+  }
+
+  if (isnan(last_temp1) || isnan(last_hum1)){ 
+    if (!errorSent1){
+      String message = "Датчик у Nicobarensis не исправен\n";
+      bot.sendMessage(CHAT_ID, message, "");
+      errorSent1 = true;
+    }
+  }
+  else {
+    errorSent1 = false;
   }
 }
 
