@@ -204,7 +204,7 @@ void checkSensors(){
         message += "🌡️ Температура у Nicobarensis: " + String(last_temp1, 2) + " °C\n";
         bot.sendMessage(CHAT_ID, message, "Markdown");
     }
-    if (temp_high = true && (last_temp0 >= max_temp || last_temp1 >= max_temp)){
+    if (temp_high = true && (last_temp0 >= max_temp && last_temp1 >= max_temp)){
         digitalWrite(RELAY0_PIN, HIGH);
         digitalWrite(RELAY1_PIN, HIGH);
         String message = "❌ *Подогрев отключен по превышению температуры!*\n";
