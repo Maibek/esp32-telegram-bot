@@ -14,6 +14,7 @@ void sendMainMenu(String chat_id) {
     String keyboardJson = R"([
         [{"text": "🐜 Данные Structor", "callback_data": "/meteo_structor"}],
         [{"text": "🐜 Данные Nicobarensis", "callback_data": "/meteo_nicobarensis"}],
+        [{"text": "☀️ Включить подогрев", "callback_data": "/relay_on"}, {"text": "❄️ Выключить подогрев", "callback_data": "/relay_off"}],
         [{"text": "ℹ️ Статус системы", "callback_data": "/status"}, {"text": "🔄 Обновить", "callback_data": "/update"}]
         ])";
   
@@ -89,7 +90,7 @@ void handleNewMessages(int numNewMessages) {
         }
         else if (text.equalsIgnoreCase("/relay_on")) {
             Serial.println(temp_high);
-            if (temp_high == false && last_temp0 < max_temp){ //После отладки добавить для второго датчика && last_temp1 < max_temp
+            if (temp_high == false && last_temp0 < max_temp && last_temp1 < max_temp){ 
                 digitalWrite(RELAY0_PIN, LOW);
                 digitalWrite(RELAY1_PIN, LOW);
                 String message = "🐜 *Подогрев у всех музавьев включен!*\n";
@@ -189,7 +190,7 @@ void checkSensors(){
     else {
         errorSent1 = false;
     }
-    if (digitalRead(RELAY0_PIN) == HIGH && last_temp0 < 28){
+    if (digitalRead(RELAY0_PIN) == HIGH && last_temp0 < min_temp){
         digitalWrite(RELAY0_PIN, LOW);
         String message = "✅ *Подогрев автоматически включен у Structor!*\n";
         message += "🌡️ Температура у Structor: " + String(last_temp0, 2) + " °C\n";
