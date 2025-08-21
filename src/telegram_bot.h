@@ -15,7 +15,7 @@ void sendMainMenu(String chat_id) {
         [{"text": "🐜 Данные Structor", "callback_data": "/meteo_structor"}],
         [{"text": "🐜 Данные Nicobarensis", "callback_data": "/meteo_nicobarensis"}],
         [{"text": "☀️ Включить подогрев", "callback_data": "/relay_on"}, {"text": "❄️ Выключить подогрев", "callback_data": "/relay_off"}],
-        [{"text": "💡 Включить подсветку", "callback_data": "/relay_on"}, {"text": "🏮 Выключить подсветку", "callback_data": "/relay_off"}],
+        [{"text": "💡 Включить подсветку", "callback_data": "/light_on"}, {"text": "🏮 Выключить подсветку", "callback_data": "/light_off"}],
         [{"text": "ℹ️ Статус системы", "callback_data": "/status"}, {"text": "🔄 Обновить", "callback_data": "/update"}]
         ])";
   
@@ -39,17 +39,17 @@ void sendStatus(String chat_id) {
     if (digitalRead(RELAY1_PIN) == HIGH){
         status_relay1 = "выключен";
     }
-    if (digitalRead(LIGHT0_PIN) == HIGH){
-        status_light0 = "включена";
-    }
     if (digitalRead(LIGHT0_PIN) == LOW){
-        status_light0 = "выключена";
+        status_light0 = "включено";
     }
-    if (digitalRead(LIGHT1_PIN) == HIGH){
-        status_light1 = "включена";
+    if (digitalRead(LIGHT0_PIN) == HIGH){
+        status_light0 = "выключено";
     }
     if (digitalRead(LIGHT1_PIN) == LOW){
-        status_light1 = "выключена";
+        status_light1 = "включено";
+    }
+    if (digitalRead(LIGHT1_PIN) == HIGH){
+        status_light1 = "выключено";
     }
     String status = "🖥️ *Статус системы*\n";
     status += "📶 Сигнал: " + String(WiFi.RSSI()) + " dBm\n";
@@ -57,11 +57,11 @@ void sendStatus(String chat_id) {
     status += "🕒 Аптайм: " + String(millis() / 1000 / 60) + " минут\n";
     status += "🌡️ Температура ядра: " + String((temprature_sens_read() - 32) / 1.8f) + " °C\n";
     status += "🔥 *Статус подогрева: *\n";
-    status += "☀️ Подогрев у " + sensor_0 + status_relay0 + "!\n";
-    status += "☀️ Подогрев у " + sensor_1 + status_relay1 + "!\n";
+    status += "☀️ Подогрев у " + sensor_0 + " " + status_relay0 + "!\n";
+    status += "☀️ Подогрев у " + sensor_1 + " " +  status_relay1 + "!\n";
     status += "💡 *Статус освещения: *\n";
-    status += "🌟 Освещение у " + sensor_0 + status_light0 + "!\n";
-    status += "🌟 Освещение у " + sensor_1 + status_light1 + "!\n";    
+    status += "🌟 Освещение у " + sensor_0 + " " +  status_light0 + "!\n";
+    status += "🌟 Освещение у " + sensor_1 + " " +  status_light1 + "!\n";    
     bot.sendMessage(chat_id, status, "Markdown");
 }
 
@@ -162,6 +162,8 @@ void handleNewMessages(int numNewMessages) {
         }
         else if (text.equalsIgnoreCase("/light_on")) {
             if (light == false){
+                digitalWrite(LIGHT0_PIN, LOW);
+                digitalWrite(LIGHT1_PIN, LOW);
                 String message = "💡 Подсветка включена\n";
                 bot.sendMessage(chat_id, message, "Markdown");
                 light = true;
@@ -172,7 +174,9 @@ void handleNewMessages(int numNewMessages) {
             }
         }
         else if (text.equalsIgnoreCase("/light_off")) {
-            if (light == true){
+            if (light == true){                
+                digitalWrite(LIGHT0_PIN, HIGH);
+                digitalWrite(LIGHT1_PIN, HIGH);
                 String message = "🏮 Подсветка выключена\n";
                 bot.sendMessage(chat_id, message, "Markdown");
                 light = false;
@@ -220,6 +224,8 @@ void handleNewMessages(int numNewMessages) {
             }
             else if (text.equalsIgnoreCase("/light_on")) {
                 if (light == false){
+                    digitalWrite(LIGHT0_PIN, LOW);
+                    digitalWrite(LIGHT1_PIN, LOW);
                     String message = "💡 Подсветка включена\n";
                     bot.sendMessage(chat_id, message, "Markdown");
                     light = true;
@@ -231,6 +237,8 @@ void handleNewMessages(int numNewMessages) {
             }
             else if (text.equalsIgnoreCase("/light_off")) {
                 if (light == true){
+                    digitalWrite(LIGHT0_PIN, HIGH);
+                    digitalWrite(LIGHT1_PIN, HIGH);
                     String message = "🏮 Подсветка выключена\n";
                     bot.sendMessage(chat_id, message, "Markdown");
                     light = false;
@@ -261,6 +269,7 @@ void checkSensors(){
     static bool errorSent1 = false;
     if (isnan(last_temp0) || isnan(last_hum0)){
         if (!errorSent0){
+            digitalWrite(RELAY0_PIN, HIGH);
             String message = "🔧 Датчик у " + sensor_0 + " не исправен\n";
             bot.sendMessage(CHAT_ID, message, "Markdown");
             errorSent0 = true;
@@ -272,6 +281,7 @@ void checkSensors(){
 
     if (isnan(last_temp1) || isnan(last_hum1)){ 
         if (!errorSent1){
+            digitalWrite(RELAY1_PIN, HIGH);
             String message = "🔧 Датчик у " + sensor_1 + " не исправен\n";
             bot.sendMessage(CHAT_ID, message, "Markdown");
             errorSent1 = true;

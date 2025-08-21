@@ -20,8 +20,8 @@ void setup() {
   digitalWrite(RELAY0_PIN, HIGH);
   digitalWrite(RELAY1_PIN, HIGH);
 
-  digitalWrite(LIGHT0_PIN, LOW);
-  digitalWrite(LIGHT1_PIN, LOW);
+  digitalWrite(LIGHT0_PIN, HIGH);
+  digitalWrite(LIGHT1_PIN, HIGH);
   
   client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
 
