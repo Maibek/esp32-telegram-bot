@@ -91,10 +91,6 @@ void handleNewMessages(int numNewMessages) {
         }
 
         // Обработка команд (без callback префикса)
-        if (text.equalsIgnoreCase("/local_ip")){
-            String message = "Локальный IP адресс: " + String(WiFi.localIP()) + "\n";
-            bot.sendMessage(chat_id, message, "Markdown");
-        }
         if (text.equalsIgnoreCase("/meteo_structor")) {
             String message = "🐜 Климат у *" + sensor_0 + "!\n";      
             message += "🌡️ Температура: " + String(last_temp0, 2) + " °C\n";
@@ -116,6 +112,10 @@ void handleNewMessages(int numNewMessages) {
         }
         else if (text.equalsIgnoreCase("/help")) {
             sendMainMenu(chat_id);
+        }
+        else if (text.equalsIgnoreCase("/local_ip")){
+            String message = "Локальный IP адресс: " + String(WiFi.localIP()) + "\n";
+            bot.sendMessage(chat_id, message, "Markdown");
         }
         else if (text.equalsIgnoreCase("/relay_on")) {
             if (temp_high == false && last_temp0 < max_temp && last_temp1 < max_temp){ 
