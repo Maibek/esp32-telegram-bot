@@ -7,7 +7,7 @@ void alarm_high_temp(){
     static unsigned long alert_high_time0 = 0;
     static unsigned long alert_high_time1 = 0;
 
-    if (last_temp0 > max_temp){
+    if (last_temp0 > alarm_max_temp){
         if (millis() - alert_high_time0 > ALARM_REPEAT_INTERVAL){
             digitalWrite(RELAY0_PIN, HIGH);        
             String message = "⚠️ Тревога\n";
@@ -18,11 +18,11 @@ void alarm_high_temp(){
             alert_high_time0 = millis();
         }
     }
-    else if (last_temp0 < max_temp) {
+    else if (last_temp0 < alarm_max_temp) {
         alert_high_time0 = 0;
     }
 
-    if (last_temp1 > max_temp){
+    if (last_temp1 > alarm_max_temp){
         if (millis() - alert_high_time1 > ALARM_REPEAT_INTERVAL){
             digitalWrite(RELAY1_PIN, HIGH);
             String message = "⚠️ Тревога!\n";
@@ -33,7 +33,7 @@ void alarm_high_temp(){
             alert_high_time1 = millis();
         }
     }
-    else if (last_temp1 < max_temp) {
+    else if (last_temp1 < alarm_max_temp) {
         alert_high_time1 = 0;
     }
 
@@ -43,7 +43,7 @@ void alarm_low_temp(){
     static unsigned long alert_low_time0 = 0;
     static unsigned long alert_low_time1 = 0;
 
-    if (last_temp0 < min_temp){
+    if (last_temp0 < alarm_min_temp){
         if (millis() - alert_low_time0 > ALARM_REPEAT_INTERVAL){
             String message = "⚠️ Тревога\n";
             message += "❄️ Низкая температура у Structor!";
@@ -53,12 +53,12 @@ void alarm_low_temp(){
             alert_low_time0 = millis();
         }
     }
-    else if (last_temp0 > min_temp) {
+    else if (last_temp0 > alarm_min_temp) {
         alert_low_time0 = 0;
     }
 
 
-    if (last_temp1 < min_temp){
+    if (last_temp1 < alarm_min_temp){
         if (millis() - alert_low_time1 > ALARM_REPEAT_INTERVAL){
             String message = "⚠️ Тревога\n";
             message += "❄️ Низкая температура у Nicobarensis!";
@@ -68,7 +68,7 @@ void alarm_low_temp(){
             alert_low_time1 = millis();
         }
     }
-    else if (last_temp1 > min_temp) {
+    else if (last_temp1 > alarm_min_temp) {
         alert_low_time1 = 0;
     }
 

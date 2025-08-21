@@ -14,9 +14,14 @@ void setup() {
 
   pinMode(RELAY0_PIN, OUTPUT);
   pinMode(RELAY1_PIN, OUTPUT);
+  pinMode(LIGHT0_PIN, OUTPUT);
+  pinMode(LIGHT1_PIN, OUTPUT);
 
   digitalWrite(RELAY0_PIN, HIGH);
   digitalWrite(RELAY1_PIN, HIGH);
+
+  digitalWrite(LIGHT0_PIN, LOW);
+  digitalWrite(LIGHT1_PIN, LOW);
   
   client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
 

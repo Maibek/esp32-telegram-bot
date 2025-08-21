@@ -16,10 +16,14 @@ float last_temp0 = NAN;
 float last_hum0 = NAN;
 float last_temp1 = NAN;
 float last_hum1 = NAN;
-const float min_temp = 26.0;
+const float min_temp = 27;
 const float max_temp = 29;
+const float alarm_min_temp = min_temp - 2 ;
+const float alarm_max_temp = max_temp + 1;
 const float min_hum = 40;
 const float max_hum = 70;
+const String sensor_0 = "Structor";
+const String sensor_1 = "Nicobarensis";
 
 //Глобальные переменные для времени
 unsigned long last_sensor_read = 0;
@@ -33,9 +37,14 @@ const int SCL0_PIN = 19;
 const int SDA1_PIN = 22;
 const int SCL1_PIN = 23;
 
+// Переменные для подсветки
+const int LIGHT0_PIN = 2;
+const int LIGHT1_PIN = 4;
+
 // Переменные для пинов реле
 const int RELAY0_PIN = 16;
 const int RELAY1_PIN = 17;
 
 // Глобальные флаги
 bool temp_high = false;
+bool light = false;
