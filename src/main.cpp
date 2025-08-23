@@ -17,11 +17,11 @@ void setup() {
   pinMode(LIGHT0_PIN, OUTPUT);
   pinMode(LIGHT1_PIN, OUTPUT);
 
-  digitalWrite(RELAY0_PIN, HIGH);
-  digitalWrite(RELAY1_PIN, HIGH);
+  digitalWrite(RELAY0_PIN, relay0_status);
+  digitalWrite(RELAY1_PIN, relay1_status);
 
-  digitalWrite(LIGHT0_PIN, HIGH);
-  digitalWrite(LIGHT1_PIN, HIGH);
+  digitalWrite(LIGHT0_PIN, light_status);
+  digitalWrite(LIGHT1_PIN, light_status);
   
   client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
 
@@ -54,8 +54,11 @@ void loop() {
     checkSensors();
     last_check = millis();
   }
+  checkHeating();  
   alarm_high_temp();
   alarm_low_temp();
+  alarm_high_hum();
+  alarm_low_hum();
 
   // Проверка соединения WiFi
   static unsigned long lastCheck = 0;
@@ -68,18 +71,36 @@ void loop() {
     lastCheck = millis();
   }
 
+  if (millis() - bot_lasttime > BOT_MTBS) {
+  int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+  
+  if (numNewMessages > 0) {
+    // Проверяем, не слишком ли частые callback-запросы
+    if (millis() - lastCallbackTime < CALLBACK_COOLDOWN) {
+      Serial.println("Слишком частые callback запросы, игнорируем");
+    } else {
+      Serial.println("Получены новые сообщения: " + String(numNewMessages));
+      handleNewMessages(numNewMessages);
+      lastCallbackTime = millis();
+    }
+  }
+  
+  bot_lasttime = millis();
+}
+
   // Обработка сообщений Telegram. В будущем лучше реализовать webhook. Так как иногда бот не сбрасывает значения сообщений и начинает спамить в ответ на запрос.
   if (millis() - bot_lasttime > BOT_MTBS) {
-    Serial.println("Проверка сообщений Telegram...");
+    Serial.println("Проверка новых сообщений");
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-
-    if (numNewMessages > 0) {
-      Serial.println("Найдено сообщений: " + String(numNewMessages));
+    Serial.println("Сообщений: " + String(numNewMessages));
+    
+    while (numNewMessages) {
+      Serial.println("Получены новые сообщения: " + String(numNewMessages));
       handleNewMessages(numNewMessages);
+      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+      delay(100);
     }
     
-    // Нужно для отладки. После окончания проекта можно будет удалить.
     bot_lasttime = millis();
-    Serial.println("Свободная память: " + String(ESP.getFreeHeap()));
   }  
 }
