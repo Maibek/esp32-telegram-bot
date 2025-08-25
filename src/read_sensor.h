@@ -9,11 +9,9 @@ Adafruit_HTU21DF sensor1;
 
 void safe_sensor_read() {
     if (millis() - last_sensor_read > 5000) {
-        // Чтение первого датчика
         float t0 = sensor0.readTemperature();
         float h0 = sensor0.readHumidity();
         
-        // Чтение второго датчика
         float t1 = sensor1.readTemperature();
         float h1 = sensor1.readHumidity();
         

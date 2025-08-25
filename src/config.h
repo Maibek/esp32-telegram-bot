@@ -22,8 +22,6 @@ const float alarm_min_temp = min_temp - 2 ;
 const float alarm_max_temp = max_temp + 1;
 const float min_hum = 40;
 const float max_hum = 70;
-const String sensor_0 = "Structor";
-const String sensor_1 = "Nicobarensis";
 
 //Глобальные переменные для времени
 unsigned long last_sensor_read = 0;
@@ -55,4 +53,6 @@ int light0_status = LOW;
 int light1_status = LOW;
 int relay0_status = HIGH;
 int relay1_status = HIGH;
+const String sensor_0 = "Structor";
+const String sensor_1 = "Nicobarensis";
 
