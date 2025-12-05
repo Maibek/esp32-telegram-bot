@@ -22,6 +22,8 @@ const float alarm_min_temp = min_temp - 2 ;
 const float alarm_max_temp = max_temp + 1;
 const float min_hum = 40;
 const float max_hum = 70;
+const String sensor_0 = "Structor";
+const String sensor_1 = "Nicobarensis";
 
 //Глобальные переменные для времени
 unsigned long last_sensor_read = 0;
@@ -32,10 +34,10 @@ unsigned long lastCallbackTime = 0;
 const unsigned long CALLBACK_COOLDOWN = 500; // 0.5 секунды
 
 // Переменные для пинов датчиков
-const int SDA0_PIN = 18;
-const int SCL0_PIN = 19;
-const int SDA1_PIN = 22;
-const int SCL1_PIN = 23;
+const int SDA0_PIN = 23;
+const int SCL0_PIN = 22;
+const int SDA1_PIN = 19;
+const int SCL1_PIN = 18;
 
 // Переменные для подсветки
 const int LIGHT0_PIN = 2;
@@ -48,11 +50,9 @@ const int RELAY1_PIN = 17;
 // Дополнительные переменные и флаги
 bool temp_high = false;
 bool light = false;
-int light_status = LOW;
-int light0_status = LOW;
-int light1_status = LOW;
+int light_status = HIGH;
+int light0_status = HIGH;
+int light1_status = HIGH;
 int relay0_status = HIGH;
 int relay1_status = HIGH;
-const String sensor_0 = "Structor";
-const String sensor_1 = "Nicobarensis";
 
