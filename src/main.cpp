@@ -3,9 +3,10 @@
 
 #include "telegram_bot.h"
 #include "config.h"
-#include "wifi_connect.h"
+#include "secret.h"
 #include "read_sensor.h"
 #include "alarm.h"
+#include "wifi_connect.h"
 
 
 void setup() {

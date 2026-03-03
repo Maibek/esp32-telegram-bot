@@ -1,8 +1,7 @@
 #pragma once
 #include <UniversalTelegramBot.h>
 
-#include "wifi_connect.h"
-#include "token_bot.h"
+#include "secret.h"
 #include "read_sensor.h"
 #include "config.h"
 

@@ -9,7 +9,7 @@ void checkSensors(){
     if (isnan(last_temp0) || isnan(last_hum0)){
         if (!errorSent0){
             String message = "🔧 Датчик у " + sensor_0 + " не исправен\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
             errorSent0 = true;
         }
     }
@@ -19,7 +19,7 @@ void checkSensors(){
     if (isnan(last_temp1) || isnan(last_hum1)){ 
         if (!errorSent1){
             String message = "🔧 Датчик у " + sensor_1 + " не исправен\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
             errorSent1 = true;
         }
     }
@@ -33,14 +33,14 @@ void checkHeating(){
         String message = "✅ Подогрев автоматически включен у " + sensor_0 + "\n";
         message += "🌡️ Температура у " + sensor_0 + ": " + String(last_temp0, 2) + " °C\n";
         message += "🌡️ Температура у " + sensor_1 + ": " + String(last_temp1, 2) + " °C\n";
-        bot.sendMessage(CHAT_ID, message, "Markdown");
+        bot.sendMessage(CHAT_ADMIN, message, "Markdown");
     }
     else if (digitalRead(RELAY1_PIN) == HIGH && last_temp1 < min_temp){
         digitalWrite(RELAY1_PIN, LOW);
         String message = "✅ Подогрев автоматически включен у " + sensor_1 + "\n";
         message += "🌡️ Температура у " + sensor_0 + ": " + String(last_temp0, 2) + " °C\n";
         message += "🌡️ Температура у " + sensor_1 + ": " + String(last_temp1, 2) + " °C\n";
-        bot.sendMessage(CHAT_ID, message, "Markdown");
+        bot.sendMessage(CHAT_ADMIN, message, "Markdown");
     }
     else if (temp_high == true && (last_temp0 >= max_temp && last_temp1 >= max_temp)){
         digitalWrite(RELAY0_PIN, HIGH);
@@ -48,7 +48,7 @@ void checkHeating(){
         String message = "❌ *Подогрев отключен по превышению температуры!*\n";
         message += "🌡️ Температура у " + sensor_0 + ": " + String(last_temp0, 2) + " °C\n";
         message += "🌡️ Температура у " + sensor_1 + ": " + String(last_temp1, 2) + " °C\n";
-        bot.sendMessage(CHAT_ID, message, "Markdown");
+        bot.sendMessage(CHAT_ADMIN, message, "Markdown");
         temp_high = false;
     }
     else if (digitalRead(RELAY0_PIN) == LOW && last_temp0 >= max_temp){
@@ -56,14 +56,14 @@ void checkHeating(){
         String message = "❌ *Подогрев отключен у " + sensor_0 + " по превышению температуры!*\n";
         message += "🌡️ Температура у " + sensor_0 + ": " + String(last_temp0, 2) + " °C\n";
         message += "🌡️ Температура у " + sensor_1 + ": " + String(last_temp1, 2) + " °C\n";
-        bot.sendMessage(CHAT_ID, message, "Markdown");
+        bot.sendMessage(CHAT_ADMIN, message, "Markdown");
     }
     else if (digitalRead(RELAY1_PIN) == LOW && last_temp1 >= max_temp){
         digitalWrite(RELAY1_PIN, HIGH);
         String message = "❌ *Подогрев отключен у " + sensor_1 + " по превышению температуры!*\n";
         message += "🌡️ Температура у " + sensor_0 + ": " + String(last_temp0, 2) + " °C\n";
         message += "🌡️ Температура у " + sensor_1 + ": " + String(last_temp1, 2) + " °C\n";
-        bot.sendMessage(CHAT_ID, message, "Markdown");
+        bot.sendMessage(CHAT_ADMIN, message, "Markdown");
     }
 }
 void alarm_high_temp(){
@@ -76,7 +76,7 @@ void alarm_high_temp(){
             String message = "⚠️ Тревога\n";
             message += "🔥 Высокая температура у Structor!";
             message += "🌡️ Текущая температура: " + String(last_temp0, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_high_time0 = millis();
         }
@@ -91,7 +91,7 @@ void alarm_high_temp(){
             String message = "⚠️ Тревога!\n";
             message += "🔥 Высокая температура у Nicobarensis!";
             message += "🌡️ Текущая температура: " + String(last_temp1, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_high_time1 = millis();
         }
@@ -111,7 +111,7 @@ void alarm_low_temp(){
             String message = "⚠️ Тревога\n";
             message += "❄️ Низкая температура у Structor!";
             message += "🌡️ Текущая температура: " + String(last_temp0, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_low_time0 = millis();
         }
@@ -126,7 +126,7 @@ void alarm_low_temp(){
             String message = "⚠️ Тревога\n";
             message += "❄️ Низкая температура у Nicobarensis!";
             message += "🌡️ Текущая температура: " + String(last_temp1, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_low_time1 = millis();
         }
@@ -146,7 +146,7 @@ void alarm_high_hum(){
             String message = "⚠️ Тревога\n";
             message += "🔥 Высокая влажность у Structor!";
             message += "💧 Текущая влажность: " + String(last_hum0, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_high_time_hum0 = millis();
         }
@@ -160,7 +160,7 @@ void alarm_high_hum(){
             String message = "⚠️ Тревога!\n";
             message += "🔥 Высокая влажность у Nicobarensis!";
             message += "💧 Текущая влажность: " + String(last_hum1, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_high_time_hum1 = millis();
         }
@@ -180,7 +180,7 @@ void alarm_low_hum(){
             String message = "⚠️ Тревога\n";
             message += "❄️ Низкая влажность у Structor!";
             message += "💧 Текущая влажность: " + String(last_hum0, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_low_time_hum0 = millis();
         }
@@ -195,7 +195,7 @@ void alarm_low_hum(){
             String message = "⚠️ Тревога\n";
             message += "❄️ Низкая влажность у Nicobarensis!";
             message += "💧 Текущая влажность: " + String(last_hum1, 1) + "°C\n";
-            bot.sendMessage(CHAT_ID, message, "Markdown");
+            bot.sendMessage(CHAT_ADMIN, message, "Markdown");
 
             alert_low_time_hum1 = millis();
         }
