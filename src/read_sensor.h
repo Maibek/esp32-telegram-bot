@@ -10,34 +10,34 @@ Adafruit_HTU21DF sensor1;
 void safe_sensor_read() {
     if (millis() - last_sensor_read > 5000) {
         // Чтение первого датчика
-        float t0 = sensor0.readTemperature();
-        float h0 = sensor0.readHumidity();
+        float temp0 = sensor0.readTemperature();
+        float hum0 = sensor0.readHumidity();
         
         // Чтение второго датчика
-        float t1 = sensor1.readTemperature();
-        float h1 = sensor1.readHumidity();
+        float temp1 = sensor1.readTemperature();
+        float hum1 = sensor1.readHumidity();
         
         Serial.print("Датчик 0: Температура = ");
-        Serial.print(t0);
+        Serial.print(temp0);
         Serial.print(", Влажность = ");
-        Serial.println(h0);
+        Serial.println(hum0);
         
         Serial.print("Датчик 1: Температура = ");
-        Serial.print(t1);
+        Serial.print(temp1);
         Serial.print(", Влажность = ");
-        Serial.println(h1);
+        Serial.println(hum1);
         
         // Сохранение корректных значений
-        if (!isnan(t0)) last_temp0 = t0;
-        if (!isnan(h0)) last_hum0 = h0;
-        if (!isnan(t1)) last_temp1 = t1;
-        if (!isnan(h1)) last_hum1 = h1;
+        if (!isnan(temp0)) last_temp0 = temp0;
+        if (!isnan(hum0)) last_hum0 = hum0;
+        if (!isnan(temp1)) last_temp1 = temp1;
+        if (!isnan(hum1)) last_hum1 = hum1;
 
         // Сохранение не корректных значений
-        if (isnan(t0)) last_temp0 = NAN;
-        if (isnan(h0)) last_hum0 = NAN;
-        if (isnan(t1)) last_temp1 = NAN;
-        if (isnan(h1)) last_hum1 = NAN;
+        if (isnan(temp0)) last_temp0 = NAN;
+        if (isnan(hum0)) last_hum0 = NAN;
+        if (isnan(temp1)) last_temp1 = NAN;
+        if (isnan(hum1)) last_hum1 = NAN;
         
         last_sensor_read = millis();
     }

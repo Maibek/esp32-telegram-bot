@@ -1,39 +1,294 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ESP32 Control</title>
-  <!-- Подключаем скрипт Telegram WebApp -->
+  
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
   <style>
-    /* Тут стили: кнопки, карточки датчиков */
-    body { font-family: sans-serif; padding: 20px; }
-    .btn { padding: 15px; margin: 10px 0; width: 100%; }
+    /* === Базовые стили === */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--tg-theme-bg-color, #fff);
+      color: var(--tg-theme-text-color, #000);
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* === Заголовок === */
+    h1 {
+      text-align: center;
+      margin: 0 0 20px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    /* === Двухколоночная сетка === */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* === Карточка устройства (колонка) === */
+    .device-card {
+      background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .device-title {
+      text-align: center;
+      font-weight: 600;
+      font-size: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--tg-theme-hint-color, #ccc);
+    }
+
+    /* === Блок датчиков === */
+    .sensor-block {
+      background: var(--tg-theme-bg-color, #fff);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .sensor-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--tg-theme-button-color, #3390ec);
+    }
+
+    .sensor-label {
+      font-size: 11px;
+      color: var(--tg-theme-hint-color, #888);
+      margin-top: 4px;
+    }
+
+    .sensor-row {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 8px;
+    }
+
+    .sensor-item {
+      flex: 1;
+    }
+
+    /* === Кнопки управления === */
+    .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn:active { opacity: 0.7; }
+
+    .btn-on {
+      background: var(--tg-theme-button-color, #3390ec);
+      color: var(--tg-theme-button-text-color, #fff);
+    }
+
+    .btn-off {
+      background: var(--tg-theme-destructive-text-color, #e53935);
+      color: #fff;
+    }
+
+    .btn-refresh {
+      background: var(--tg-theme-hint-color, #999);
+      color: #fff;
+      font-size: 11px;
+      padding: 6px;
+      margin-top: 4px;
+    }
+
+    /* === Статус загрузки === */
+    .loading {
+      font-size: 12px;
+      color: var(--tg-theme-hint-color, #888);
+      font-style: italic;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* === Адаптив для маленьких экранов === */
+    @media (max-width: 400px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>🌡️ Датчики</h2>
-  <div id="sensor-data">Загрузка...</div>
-  
-  <h2>💡 Управление</h2>
-  <button class="btn" onclick="sendCommand('relay0_on')">Включить реле 0</button>
-  <button class="btn" onclick="sendCommand('relay0_off')">Выключить реле 0</button>
-  <!-- Добавь остальные кнопки -->
 
+  <h1>🏠 Управление домом</h1>
+
+  <!-- === ДВУХКОЛОНОЧНАЯ СЕТКА === -->
+  <div class="grid-container">
+    
+    <!-- === ЛЕВАЯ КОЛОНКА: Датчик 0 + Реле 0 === -->
+    <div class="device-card">
+      <div class="device-title">📍 Зона 0</div>
+      
+      <!-- Датчик 0 -->
+      <div class="sensor-block">
+        <div class="sensor-row">
+          <div class="sensor-item">
+            <div class="sensor-value" id="temp0">--</div>
+            <div class="sensor-label">🌡️ °C</div>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-value" id="hum0">--</div>
+            <div class="sensor-label">💧 %</div>
+          </div>
+        </div>
+        <div class="loading" id="status0">Ожидание...</div>
+        <button class="btn btn-refresh" onclick="requestSensor(0)">🔄 Обновить</button>
+      </div>
+
+      <!-- Реле 0 -->
+      <div class="btn-row">
+        <button class="btn btn-on" onclick="sendRelayCmd(0, 'on')">🔌 ВКЛ</button>
+        <button class="btn btn-off" onclick="sendRelayCmd(0, 'off')">🔌 ВЫКЛ</button>
+      </div>
+    </div>
+
+    <!-- === ПРАВАЯ КОЛОНКА: Датчик 1 + Реле 1 === -->
+    <div class="device-card">
+      <div class="device-title">📍 Зона 1</div>
+      
+      <!-- Датчик 1 -->
+      <div class="sensor-block">
+        <div class="sensor-row">
+          <div class="sensor-item">
+            <div class="sensor-value" id="temp1">--</div>
+            <div class="sensor-label">🌡️ °C</div>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-value" id="hum1">--</div>
+            <div class="sensor-label">💧 %</div>
+          </div>
+        </div>
+        <div class="loading" id="status1">Ожидание...</div>
+        <button class="btn btn-refresh" onclick="requestSensor(1)">🔄 Обновить</button>
+      </div>
+
+      <!-- Реле 1 -->
+      <div class="btn-row">
+        <button class="btn btn-on" onclick="sendRelayCmd(1, 'on')">🔌 ВКЛ</button>
+        <button class="btn btn-off" onclick="sendRelayCmd(1, 'off')">🔌 ВЫКЛ</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- === СКРИПТЫ === -->
   <script>
-    // Инициализация WebApp
+    // === Инициализация Telegram WebApp ===
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Раскрыть на весь экран
+    tg.expand();
+    tg.enableClosingConfirmation();
+
+    // === Таймер автообновления (10 минут = 600000 мс) ===
+    let autoRefreshTimer = null;
+
+    // === ОТПРАВКА КОМАНД НА ESP32 ===
     
-    // Функция отправки команды боту
-    function sendCommand(cmd) {
-      // sendData отправляет данные боту как "сообщение от WebApp"
-      tg.sendData(JSON.stringify({ command: cmd }));
+    // Управление реле
+    function sendRelayCmd(relayId, state) {
+      const cmd = {
+        action: "relay",
+        id: relayId,
+        state: state
+      };
+      tg.sendData(JSON.stringify(cmd));
+      
+      // Визуальный отклик
+      tg.showPopup({ 
+        title: "Команда отправлена",
+        message: `Реле ${relayId} → ${state === 'on' ? 'ВКЛ' : 'ВЫКЛ'}`,
+        buttons: [{ type: "ok" }]
+      });
     }
+
+    // Запрос данных с датчика
+    function requestSensor(sensorId) {
+      const cmd = {
+        action: "sensor",
+        sensor_id: sensorId
+      };
+      tg.sendData(JSON.stringify(cmd));
+      
+      // Показать индикатор загрузки
+      const statusEl = document.getElementById(`status${sensorId}`);
+      if (statusEl) statusEl.textContent = "Запрос...";
+    }
+
+    // Обновление статуса в интерфейсе (визуально)
+    function updateSensorDisplay(sensorId, temp, hum) {
+      const tempEl = document.getElementById(`temp${sensorId}`);
+      const humEl = document.getElementById(`hum${sensorId}`);
+      const statusEl = document.getElementById(`status${sensorId}`);
+      
+      if (tempEl) tempEl.textContent = temp.toFixed(1);
+      if (humEl) humEl.textContent = hum.toFixed(1);
+      if (statusEl) statusEl.textContent = "Обновлено: " + new Date().toLocaleTimeString();
+    }
+
+    // === АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ ===
     
-    // (Опционально) Показать данные пользователя для отладки
-    console.log("User ID:", tg.initDataUnsafe?.user?.id);
+    // Запросить данные при открытии приложения
+    function initAutoRefresh() {
+      console.log("🔄 Автообновление запущено");
+      
+      // Запросить оба датчика сразу
+      setTimeout(() => requestSensor(0), 500);
+      setTimeout(() => requestSensor(1), 1000);
+      
+      // Запуск таймера на 10 минут
+      autoRefreshTimer = setInterval(() => {
+        console.log("🔄 Плановое обновление датчиков");
+        requestSensor(0);
+        requestSensor(1);
+      }, 600000);  // 10 минут = 600000 мс
+    }
+
+    // === ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ===
+    window.addEventListener('load', () => {
+      initAutoRefresh();
+      
+      // Лог для отладки
+      if (tg.initDataUnsafe?.user) {
+        console.log("👤 Web App открыл: " + tg.initDataUnsafe.user.first_name);
+      }
+    });
+
+    // === ОЧИСТКА ТАЙМЕРА ПРИ ЗАКРЫТИИ ===
+    tg.onEvent('viewport_changed', () => {
+      // Если пользователь свернул приложение
+    });
+
+    // При закрытии Web App таймер очистится автоматически (страница выгрузится)
   </script>
 </body>
 </html>

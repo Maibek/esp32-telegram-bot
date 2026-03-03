@@ -1,9 +1,12 @@
 #pragma once
 #include <UniversalTelegramBot.h>
+#include <Arduino.h>
 
 #include "secret.h"
-#include "read_sensor.h"
 #include "config.h"
+#include "read_sensor.h"
+#include "api_handler.h"
+
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(TOKEN_BOT, client);
@@ -106,6 +109,19 @@ void handleNewMessages(int numNewMessages){
         Serial.println("ID чата: " + String(bot.messages[i].chat_id));
         Serial.println("Текст: " + bot.messages[i].text);
 
+        if (text.startsWith("{")) {
+
+            String action = "";
+            int relay_id = -1;
+            String state = "";
+            int sensor_id = -1;
+
+            parseJsonCommand(text, action, relay_id, state, sensor_id);
+            executeApiCommand(action, relay_id, state, sensor_id, chat_id);
+
+            continue;
+        }
+        
         if (bot.messages[i].type == "callback_query"){
             Serial.println("Обработка callback: " + text);
       

@@ -7,6 +7,7 @@
 #include "read_sensor.h"
 #include "alarm.h"
 #include "wifi_connect.h"
+#include "api_handler.h"
 
 
 void setup() {
