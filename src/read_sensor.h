@@ -28,16 +28,16 @@ void safe_sensor_read() {
         Serial.println(hum1);
         
         // Сохранение корректных значений
-        if (!isnan(temp0)) last_temp0 = temp0;
-        if (!isnan(hum0)) last_hum0 = hum0;
-        if (!isnan(temp1)) last_temp1 = temp1;
-        if (!isnan(hum1)) last_hum1 = hum1;
+        if (!isnan(temp0)) last_temp_0 = temp0;
+        if (!isnan(hum0)) last_hum_0 = hum0;
+        if (!isnan(temp1)) last_temp_1 = temp1;
+        if (!isnan(hum1)) last_hum_1 = hum1;
 
         // Сохранение не корректных значений
-        if (isnan(temp0)) last_temp0 = NAN;
-        if (isnan(hum0)) last_hum0 = NAN;
-        if (isnan(temp1)) last_temp1 = NAN;
-        if (isnan(hum1)) last_hum1 = NAN;
+        if (isnan(temp0)) last_temp_0 = NAN;
+        if (isnan(hum0)) last_hum_0 = NAN;
+        if (isnan(temp1)) last_temp_1 = NAN;
+        if (isnan(hum1)) last_hum_1 = NAN;
         
         last_sensor_read = millis();
     }

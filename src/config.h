@@ -11,19 +11,28 @@ uint8_t temprature_sens_read();  // Объявление функции из SDK
 }
 #endif
 
+// Структура данных для json
+float min_temp_0;
+float max_temp_0;
+float min_temp_1;
+float max_temp_1;
+float alarm_min_temp_0;
+float alarm_max_temp_0;
+float alarm_min_hum_0;
+float alarm_max_hum_0;
+float alarm_min_temp_1;
+float alarm_max_temp_1;
+float alarm_min_hum_1;
+float alarm_max_hum_1;
+String sensor_0_name;
+String sensor_1_name;
+
+
 // Глобальные переменные для датчиков
-float last_temp0 = NAN;
-float last_hum0 = NAN;
-float last_temp1 = NAN;
-float last_hum1 = NAN;
-const float min_temp = 26;
-const float max_temp = 29;
-const float alarm_min_temp = min_temp - 2 ;
-const float alarm_max_temp = max_temp + 1;
-const float min_hum = 40;
-const float max_hum = 70;
-const String sensor_0 = "Structor";
-const String sensor_1 = "Nicobarensis";
+float last_temp_0 = NAN;
+float last_hum_0 = NAN;
+float last_temp_1 = NAN;
+float last_hum_1 = NAN;
 
 //Глобальные переменные для времени
 unsigned long last_sensor_read = 0;
@@ -51,8 +60,8 @@ const int RELAY1_PIN = 17;
 bool temp_high = false;
 bool light = false;
 int light_status = HIGH;
-int light0_status = HIGH;
-int light1_status = HIGH;
-int relay0_status = HIGH;
-int relay1_status = HIGH;
+int light_0_status = HIGH;
+int light_1_status = HIGH;
+int relay_0_status = HIGH;
+int relay_1_status = HIGH;
 

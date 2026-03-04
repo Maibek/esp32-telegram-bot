@@ -3,6 +3,7 @@
 
 #include "telegram_bot.h"
 #include "config.h"
+#include "settings.h"
 #include "secret.h"
 #include "read_sensor.h"
 #include "alarm.h"
@@ -14,14 +15,24 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
 
+  if (!LittleFS.begin()) {
+    Serial.println("Ошибка монтирования LittleFS");
+    return;
+  }
+  else {
+    Serial.println("LittleFS успешно смонтирован");
+  }
+
+  loadSettings();
+
   pinMode(RELAY0_PIN, OUTPUT);
   pinMode(RELAY1_PIN, OUTPUT);
   pinMode(LIGHT0_PIN, OUTPUT);
   pinMode(LIGHT1_PIN, OUTPUT);
   
 
-  digitalWrite(RELAY0_PIN, relay0_status);
-  digitalWrite(RELAY1_PIN, relay1_status);
+  digitalWrite(RELAY0_PIN, relay_0_status);
+  digitalWrite(RELAY1_PIN, relay_1_status);
 
   digitalWrite(LIGHT0_PIN, light_status);
   digitalWrite(LIGHT1_PIN, light_status);

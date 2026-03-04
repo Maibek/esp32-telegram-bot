@@ -31,10 +31,10 @@ String getMainKeyboard() {
 
 String getControlKeyboard() {
     String keyboardJson = "[[{";
-    keyboardJson += "\"text\":\"🔥 Подогрев у " + sensor_0 + ": " + String(!relay0_status ? "🟢" : "🔴") + "\",";
+    keyboardJson += "\"text\":\"🔥 Подогрев у " + sensor_0_name + ": " + String(!relay_0_status ? "🟢" : "🔴") + "\",";
     keyboardJson += "\"callback_data\":\"/relay0\"";
     keyboardJson += "}],[{";
-    keyboardJson += "\"text\":\"🔥 Подогрев у " + sensor_1 + ": " + String(!relay1_status ? "🟢" : "🔴") + "\",";
+    keyboardJson += "\"text\":\"🔥 Подогрев у " + sensor_1_name + ": " + String(!relay_1_status ? "🟢" : "🔴") + "\",";
     keyboardJson += "\"callback_data\":\"/relay1\"";
     keyboardJson += "}],[{";
     keyboardJson += "\"text\":\"💡 Свет: " + String(light_status ? "🟢" : "🔴") + "\",";
@@ -49,9 +49,9 @@ String getControlKeyboard() {
 
 String getSensorKeyboard() {
     String keyboardJson = "[[{";
-    keyboardJson += "\"text\":\"🌡️ " + sensor_0 + "\", \"callback_data\": \"/sensor0\"";
+    keyboardJson += "\"text\":\"🌡️ " + sensor_0_name + "\", \"callback_data\": \"/sensor0\"";
     keyboardJson += "}],[{";
-    keyboardJson += "\"text\":\"🌡️ " + sensor_1 + "\", \"callback_data\": \"/sensor1\"";
+    keyboardJson += "\"text\":\"🌡️ " + sensor_1_name + "\", \"callback_data\": \"/sensor1\"";
     keyboardJson += "}],[{";
     keyboardJson += "\"text\":\"🔙 Назад\", \"callback_data\": \"/back\"";
     keyboardJson += "}]]";
@@ -90,8 +90,8 @@ void sendStatus(String chat_id) {
     status += "🕒 Аптайм: " + String(millis() / 1000 / 60) + " минут\n";
     status += "🌡️ Температура ядра: " + String((temprature_sens_read() - 32) / 1.8f) + " °C\n";
     status += "🔥 *Статус подогрева: *\n";
-    status += String("☀️ Подогрев у ") + sensor_0 + (!relay0_status ? " включен" : " выключен") + "!\n";
-    status += String("☀️ Подогрев у ") + sensor_1 + (!relay1_status ? " включен" : " выключен") + "!\n";
+    status += String("☀️ Подогрев у ") + sensor_0_name + (!relay_0_status ? " включен" : " выключен") + "!\n";
+    status += String("☀️ Подогрев у ") + sensor_1_name + (!relay_1_status ? " включен" : " выключен") + "!\n";
     status += "💡 *Статус освещения: *\n";
     status += String("🌟 Освещение у муравьев ") + (light_status ? "включено" : "выключено") + "!\n";
     bot.sendMessage(chat_id, status, "Markdown");
@@ -126,17 +126,17 @@ void handleNewMessages(int numNewMessages){
             Serial.println("Обработка callback: " + text);
       
         if (text == "/relay0") {
-            relay0_status = !relay0_status;
-            digitalWrite(RELAY0_PIN, relay0_status);
-            bot.answerCallbackQuery(bot.messages[i].query_id, String("Подогрев у ") + sensor_0 + (!relay0_status ? " включен" : " выключен"));
-            message = String("Подогрев у ") + sensor_0 + (!relay0_status ? " включен" : " выключен");
+            relay_0_status = !relay_0_status;
+            digitalWrite(RELAY0_PIN, relay_0_status);
+            bot.answerCallbackQuery(bot.messages[i].query_id, String("Подогрев у ") + sensor_0_name + (!relay_0_status ? " включен" : " выключен"));
+            message = String("Подогрев у ") + sensor_0_name + (!relay_0_status ? " включен" : " выключен");
             bot.sendMessageWithInlineKeyboard(chat_id, message, "Markdown", getKeyboard(RELAY_KEYBOARD), message_id);
         }
         else if (text == "/relay1") {
-            relay1_status = !relay1_status;
-            digitalWrite(RELAY1_PIN, relay1_status);
-            bot.answerCallbackQuery(bot.messages[i].query_id, String("Подогрев у ") + sensor_1 + (!relay1_status ? " включен" : " выключен"));
-            message = String("Подогрев у ") + sensor_1 + (!relay1_status ? " включен" : " выключен");
+            relay_1_status = !relay_1_status;
+            digitalWrite(RELAY1_PIN, relay_1_status);
+            bot.answerCallbackQuery(bot.messages[i].query_id, String("Подогрев у ") + sensor_1_name + (!relay_1_status ? " включен" : " выключен"));
+            message = String("Подогрев у ") + sensor_1_name + (!relay_1_status ? " включен" : " выключен");
             bot.sendMessageWithInlineKeyboard(chat_id, message, "Markdown", getKeyboard(RELAY_KEYBOARD), message_id);
         }
         else if (text == "/light") {
@@ -148,15 +148,15 @@ void handleNewMessages(int numNewMessages){
             bot.sendMessageWithInlineKeyboard(chat_id, message, "Markdown", getKeyboard(RELAY_KEYBOARD), message_id);
         }
         else if (text == "/sensor0") {
-            String message = "🐜 Климат у " + sensor_0 + "\n";      
-            message += "🌡️ Температура: " + String(last_temp0, 2) + " °C\n";
-            message += "💧 Влажность: " + String(last_hum0, 2) + " %";
+            String message = "🐜 Климат у " + sensor_0_name + "\n";      
+            message += "🌡️ Температура: " + String(last_temp_0, 2) + " °C\n";
+            message += "💧 Влажность: " + String(last_hum_0, 2) + " %";
             bot.sendMessageWithInlineKeyboard(chat_id, message, "Markdown", getKeyboard(SENSOR_KEYBOARD), message_id);
         }
         else if (text == "/sensor1") {
-            String message = "🐜 Климат у " + sensor_1 + "\n";      
-            message += "🌡️ Температура: " + String(last_temp1, 2) + " °C\n";
-            message += "💧 Влажность: " + String(last_hum1, 2) + " %";
+            String message = "🐜 Климат у " + sensor_1_name + "\n";      
+            message += "🌡️ Температура: " + String(last_temp_1, 2) + " °C\n";
+            message += "💧 Влажность: " + String(last_hum_1, 2) + " %";
             bot.sendMessageWithInlineKeyboard(chat_id, message, "Markdown", getKeyboard(SENSOR_KEYBOARD), message_id);
         }
         else if (text == "/status") {
