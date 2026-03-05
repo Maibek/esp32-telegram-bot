@@ -4,8 +4,9 @@
 
 #include "config.h"
 
+// ИСПРАВЛЕНО: используем fs::File для избежания конфликта с fb::File
 void saveSettings() {
-    File file = LittleFS.open("/settings.json", "w");
+    fs::File file = LittleFS.open("/settings.json", "w");
     if (!file) {
         Serial.println("Ошибка создания файла settings.json");
         return;
@@ -61,7 +62,7 @@ void saveDefaults() {
 }
 
 void loadSettings() {
-    File file = LittleFS.open("/settings.json", "r");
+    fs::File file = LittleFS.open("/settings.json", "r");
     if (!file) {
         Serial.println("Файл settings.json не найден, создаём дефолт");
         saveDefaults();
@@ -108,5 +109,4 @@ void loadSettings() {
     Serial.print("alarm_max_hum_1: ");  Serial.println(alarm_max_hum_1);
     Serial.print("sensor_0_name: ");    Serial.println(sensor_0_name);
     Serial.print("sensor_1_name: ");    Serial.println(sensor_1_name);
-
 }
