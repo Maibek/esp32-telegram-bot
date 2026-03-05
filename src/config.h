@@ -37,7 +37,7 @@ float last_hum_1 = NAN;
 //Глобальные переменные для времени
 unsigned long last_sensor_read = 0;
 unsigned long bot_lasttime = 0;
-const unsigned long BOT_MTBS = 500;
+const unsigned long BOT_MTBS = 1000;
 const unsigned long ALARM_REPEAT_INTERVAL = 10800000; // 2 часа
 unsigned long lastCallbackTime = 0;
 const unsigned long CALLBACK_COOLDOWN = 500; // 0.5 секунды

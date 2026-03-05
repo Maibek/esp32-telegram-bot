@@ -12,7 +12,7 @@
 #include "wifi_connect.h"
 #include "api_handler.h"
 
-#define WATCHDOG_TIMEOUT_MS 180000
+#define WATCHDOG_TIMEOUT_MS 60000
 
 void setup() {
   Serial.begin(115200);
@@ -86,7 +86,6 @@ void setup() {
 
 void loop() {
   esp_task_wdt_reset();
-  Serial.printf("Свободная память: %d байт\n", ESP.getFreeHeap());
   safe_sensor_read(); // Безопасное чтение датчика
   static unsigned long last_check = 0;
   if (millis() - last_check > 30000) { // Проверка каждые 30 секунд
@@ -115,13 +114,36 @@ void loop() {
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     Serial.println("Сообщений: " + String(numNewMessages));
     
-    while (numNewMessages) {
-      Serial.println("Получены новые сообщения: " + String(numNewMessages));
-      handleNewMessages(numNewMessages);
-      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-      delay(100);
+    if (millis() - bot_lasttime > BOT_MTBS) {
+      Serial.println("Проверка новых сообщений");
+      
+      int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+      Serial.println("Сообщений: " + String(numNewMessages));
+      
+      if (numNewMessages > 0) {
+        // Диагностика
+        Serial.println("=== ДИАГНОСТИКА СООБЩЕНИЙ ===");
+        for (int i = 0; i < numNewMessages; i++) {
+            Serial.println("Сообщение " + String(i) + ": ID=" + String(bot.messages[i].update_id));
+        }
+        
+        // Сохраняем ID последнего сообщения ПРАВИЛЬНО
+        long lastUpdateId = bot.messages[numNewMessages - 1].update_id;
+        Serial.println("Последний ID: " + String(lastUpdateId));
+        
+        // Обрабатываем
+        handleNewMessages(numNewMessages);
+        
+        // Обновляем указатель
+        bot.last_message_received = lastUpdateId;
+        
+        // Проверка
+        Serial.println("Новый last_message_received: " + String(bot.last_message_received));
+        Serial.println("================================");
+      }
     }
     
     bot_lasttime = millis();
-  }   
+    Serial.println("Обработка сообщений закончина"); 
+  }  
 }

@@ -98,8 +98,22 @@ void sendStatus(String chat_id) {
 }
 
 void handleNewMessages(int numNewMessages){
+    static long lastProcessedId = 0;
+    Serial.println("Получено сообщений для обработки: " + String(numNewMessages));
+
     for (int i = 0; i < numNewMessages; i++) {
-        
+
+        Serial.println("Обработка сообщения " + String(i) + 
+                      ": update_id=" + String(bot.messages[i].update_id) + 
+                      ", lastProcessedId=" + String(lastProcessedId));
+
+        if (bot.messages[i].update_id <= lastProcessedId) {
+            Serial.printf("Дубликат сообщения %ld, пропускаем\n", bot.messages[i].update_id);
+            continue;
+        }
+
+        lastProcessedId = bot.messages[i].update_id;
+
         if (bot.messages[i].type == "callback_query") {
             if (millis() - lastCallbackTime < CALLBACK_COOLDOWN) {
             Serial.println("Слишком частый callback, игнорируем");
