@@ -1,8 +1,10 @@
+#include <esp_task_wdt.h>
 #include <Arduino.h>
 #include <Wire.h>
 
 #include "telegram_bot.h"
 #include "config.h"
+#include "reset_reason.h"
 #include "settings.h"
 #include "secret.h"
 #include "read_sensor.h"
@@ -10,20 +12,41 @@
 #include "wifi_connect.h"
 #include "api_handler.h"
 
+#define WATCHDOG_TIMEOUT_MS 180000
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
 
+  Serial.println("Инициализация Watchdog...");
+  
+  // Простейшая инициализация watchdog
+  uint32_t timeout_sec = WATCHDOG_TIMEOUT_MS / 1000;
+  esp_task_wdt_init(timeout_sec, true); 
+  esp_task_wdt_add(NULL);
+  
+  Serial.println("Watchdog инициализирован");
+  
+  esp_task_wdt_reset();
+
   if (!LittleFS.begin()) {
-    Serial.println("Ошибка монтирования LittleFS");
-    return;
-  }
+    Serial.println("LittleFS mount failed! Попытка форматирования...");
+    LittleFS.format();
+    if (!LittleFS.begin()) {
+      Serial.println("Форматирование провалилось, дальше без FS");
+      return;
+    }
+    Serial.println("LittleFS успешно отформатирован и смонтирован");
+    saveDefaults();
+  } 
   else {
-    Serial.println("LittleFS успешно смонтирован");
+    Serial.println("LittleFS OK");
   }
 
   loadSettings();
+
+  lastResetReason = getResetReason();
+  printResetReason();
 
   pinMode(RELAY0_PIN, OUTPUT);
   pinMode(RELAY1_PIN, OUTPUT);
@@ -62,6 +85,8 @@ void setup() {
 }
 
 void loop() {
+  esp_task_wdt_reset();
+  Serial.printf("Свободная память: %d байт\n", ESP.getFreeHeap());
   safe_sensor_read(); // Безопасное чтение датчика
   static unsigned long last_check = 0;
   if (millis() - last_check > 30000) { // Проверка каждые 30 секунд
@@ -84,25 +109,7 @@ void loop() {
     }
     lastCheck = millis();
   }
-
-  if (millis() - bot_lasttime > BOT_MTBS) {
-  int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-  
-  if (numNewMessages > 0) {
-    // Проверяем, не слишком ли частые callback-запросы
-    if (millis() - lastCallbackTime < CALLBACK_COOLDOWN) {
-      Serial.println("Слишком частые callback запросы, игнорируем");
-    } else {
-      Serial.println("Получены новые сообщения: " + String(numNewMessages));
-      handleNewMessages(numNewMessages);
-      lastCallbackTime = millis();
-    }
-  }
-  
-  bot_lasttime = millis();
-}
-
-  // Обработка сообщений Telegram. В будущем лучше реализовать webhook. Так как иногда бот не сбрасывает значения сообщений и начинает спамить в ответ на запрос.
+  esp_task_wdt_reset();
   if (millis() - bot_lasttime > BOT_MTBS) {
     Serial.println("Проверка новых сообщений");
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
@@ -116,5 +123,5 @@ void loop() {
     }
     
     bot_lasttime = millis();
-  }  
+  }   
 }

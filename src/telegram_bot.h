@@ -99,6 +99,15 @@ void sendStatus(String chat_id) {
 
 void handleNewMessages(int numNewMessages){
     for (int i = 0; i < numNewMessages; i++) {
+        
+        if (bot.messages[i].type == "callback_query") {
+            if (millis() - lastCallbackTime < CALLBACK_COOLDOWN) {
+            Serial.println("Слишком частый callback, игнорируем");
+            continue; // пропускаем только этот callback
+            }
+        lastCallbackTime = millis();
+        }
+
         int message_id = bot.messages[i].message_id;
         String chat_id = String(bot.messages[i].chat_id);
         String text = bot.messages[i].text;
