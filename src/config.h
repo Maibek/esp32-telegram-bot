@@ -24,6 +24,12 @@ float alarm_min_temp_1;
 float alarm_max_temp_1;
 float alarm_min_hum_1;
 float alarm_max_hum_1;
+int alarm_all_interval;
+int alarm_sensor_interval;
+int alarm_high_temp_interval;
+int alarm_low_temp_interval;
+int alarm_high_hum_interval;
+int alarm_low_hum_interval;
 String sensor_0_name;
 String sensor_1_name;
 
@@ -38,6 +44,11 @@ float last_hum_1 = NAN;
 unsigned long last_sensor_read = 0;
 unsigned long bot_lasttime = 0;
 const unsigned long BOT_MTBS = 1000;
+const unsigned long ERROR_SENSOR_INTERVAL = alarm_sensor_interval * 60000;
+const unsigned long ALARM_HIGH_TEMP_INTERVAL = alarm_high_temp_interval * 60000;
+const unsigned long ALARM_LOW_TEMP_INTERVAL = alarm_low_temp_interval * 60000;
+const unsigned long ALARM_HIGH_HUM_INTERVAL = alarm_high_hum_interval * 60000;
+const unsigned long ALARM_LOW_HUM_INTARVAL = alarm_low_hum_interval * 60000;
 const unsigned long ALARM_REPEAT_INTERVAL = 10800000; // 2 часа
 unsigned long lastCallbackTime = 0;
 const unsigned long CALLBACK_COOLDOWN = 500; // 0.5 секунды

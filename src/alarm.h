@@ -1,10 +1,44 @@
 #pragma once
 
-#include "telegram_bot.h"     // здесь должен быть прототип sendAdminMessage
+#include "telegram_bot.h"
 #include "read_sensor.h"
 #include "config.h"
 
-// checkSensors — проверка на NaN (датчик неисправен)
+
+class Throttler {
+private:
+    struct Entry {
+        unsigned long lastTime;
+        unsigned long interval;
+    };
+    std::map<String, Entry> _timers;
+
+public:
+
+    bool canSend(const String& key, unsigned long interval) {
+        unsigned long now = millis();
+        auto it = _timers.find(key);
+        if (it == _timers.end()) {
+            _timers[key] = {now, interval};
+            return true;
+        }
+
+        Entry& e = it->second;
+        if (now - e.lastTime >= e.interval) {
+            e.lastTime = now;
+            e.interval = interval;
+            return true;
+        }
+        return false;
+    }
+
+    void reset(const String& key) {
+        _timers.erase(key);
+    }
+};
+
+Throttler notificationThrottler;
+
 void checkSensors() {
     static bool errorSent0 = false;
     static bool errorSent1 = false;
@@ -30,9 +64,8 @@ void checkSensors() {
     }
 }
 
-// checkHeating — автоматическое управление подогревом + уведомления
+// Автоматическое управление подогревом + уведомления
 void checkHeating() {
-    // Включение подогрева, если холодно и реле выключено
     if (digitalRead(RELAY0_PIN) == HIGH && last_temp_0 < min_temp_0) {
         digitalWrite(RELAY0_PIN, LOW);
         String message = "✅ *Автоматически включён* подогрев у " + sensor_0_name + "\n";
@@ -48,8 +81,7 @@ void checkHeating() {
         sendAdminMessage(message);
     }
 
-    // Отключение по превышению (общее для обоих)
-    else if (temp_high == true && (last_temp_0 >= max_temp_0 && last_temp_1 >= max_temp_1)) {
+    else if (last_temp_0 >= max_temp_0 && last_temp_1 >= max_temp_1) {
         digitalWrite(RELAY0_PIN, HIGH);
         digitalWrite(RELAY1_PIN, HIGH);
         String message = "❌ *Подогрев отключён по превышению температуры!*\n";
@@ -59,7 +91,6 @@ void checkHeating() {
         temp_high = false;
     }
 
-    // Отключение индивидуально
     else if (digitalRead(RELAY0_PIN) == LOW && last_temp_0 >= max_temp_0) {
         digitalWrite(RELAY0_PIN, HIGH);
         String message = "❌ *Подогрев отключён* у " + sensor_0_name + " (превышение)\n";
@@ -76,14 +107,13 @@ void checkHeating() {
     }
 }
 
-// alarm_high_temp — тревога высокая температура
 void alarm_high_temp() {
     static unsigned long alert_high_time_0 = 0;
     static unsigned long alert_high_time_1 = 0;
 
     if (last_temp_0 > alarm_max_temp_0) {
         if (millis() - alert_high_time_0 > ALARM_REPEAT_INTERVAL) {
-            digitalWrite(RELAY0_PIN, HIGH);  // принудительно выключаем, если нужно
+            digitalWrite(RELAY0_PIN, HIGH);
             String message = "⚠️ *Тревога! Высокая температура*\n";
             message += "🔥 У " + sensor_0_name + "!\n";
             message += "🌡️ Текущая: " + String(last_temp_0, 1) + " °C\n";
@@ -108,7 +138,6 @@ void alarm_high_temp() {
     }
 }
 
-// alarm_low_temp
 void alarm_low_temp() {
     static unsigned long alert_low_time_0 = 0;
     static unsigned long alert_low_time_1 = 0;
@@ -138,7 +167,6 @@ void alarm_low_temp() {
     }
 }
 
-// alarm_high_hum
 void alarm_high_hum() {
     static unsigned long alert_high_time_hum_0 = 0;
     static unsigned long alert_high_time_hum_1 = 0;
@@ -168,7 +196,6 @@ void alarm_high_hum() {
     }
 }
 
-// alarm_low_hum
 void alarm_low_hum() {
     static unsigned long alert_low_time_hum_0 = 0;
     static unsigned long alert_low_time_hum_1 = 0;

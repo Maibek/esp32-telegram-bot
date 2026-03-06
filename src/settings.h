@@ -54,6 +54,13 @@ void saveDefaults() {
     alarm_max_temp_1            = 32.0f;
     alarm_min_hum_1             = 30.0f;
     alarm_max_hum_1             = 70.0f;
+
+    alarm_all_interval          =180;
+    alarm_sensor_interval       =60;
+    alarm_high_temp_interval    =60;
+    alarm_low_temp_interval     =60;
+    alarm_high_hum_interval     =180;
+    alarm_low_hum_interval      =180;
     
     sensor_0_name               = "Structor";
     sensor_1_name               = "Nicobarensis";
@@ -79,34 +86,46 @@ void loadSettings() {
     }
 
     // Загрузка значений (с дефолтами на случай отсутствия ключа)
-    min_temp_0                  = doc["min_temp_0"]         | 24.0f;
-    max_temp_0                  = doc["max_temp_0"]         | 28.0f;
-    min_temp_1                  = doc["min_temp_1"]         | 26.0f;
-    max_temp_1                  = doc["max_temp_1"]         | 30.0f;
-    alarm_min_temp_0            = doc["alarm_min_temp_0"]   | 22.0f;
-    alarm_max_temp_0            = doc["alarm_max_temp_0"]   | 30.0f;
-    alarm_min_hum_0             = doc["alarm_min_hum_0"]    | 40.0f;
-    alarm_max_hum_0             = doc["alarm_max_hum_0"]    | 80.0f;
-    alarm_min_temp_1            = doc["alarm_min_temp_1"]   | 24.0f;
-    alarm_max_temp_1            = doc["alarm_max_temp_1"]   | 32.0f;
-    alarm_min_hum_1             = doc["alarm_min_hum_1"]    | 30.0f;
-    alarm_max_hum_1             = doc["alarm_max_hum_1"]    | 70.0f;
-    sensor_0_name               = doc["sensor_0_name"]      | "Structor";
-    sensor_1_name               = doc["sensor_1_name"]      | "Nicobarensis";
+    min_temp_0                  = doc["min_temp_0"]                 | 24.0f;
+    max_temp_0                  = doc["max_temp_0"]                 | 28.0f;
+    min_temp_1                  = doc["min_temp_1"]                 | 26.0f;
+    max_temp_1                  = doc["max_temp_1"]                 | 30.0f;
+    alarm_min_temp_0            = doc["alarm_min_temp_0"]           | 22.0f;
+    alarm_max_temp_0            = doc["alarm_max_temp_0"]           | 30.0f;
+    alarm_min_hum_0             = doc["alarm_min_hum_0"]            | 40.0f;
+    alarm_max_hum_0             = doc["alarm_max_hum_0"]            | 80.0f;
+    alarm_min_temp_1            = doc["alarm_min_temp_1"]           | 24.0f;
+    alarm_max_temp_1            = doc["alarm_max_temp_1"]           | 32.0f;
+    alarm_min_hum_1             = doc["alarm_min_hum_1"]            | 30.0f;
+    alarm_max_hum_1             = doc["alarm_max_hum_1"]            | 70.0f;
+    alarm_all_interval          = doc["alarm_all_interval"]         | 180;
+    alarm_sensor_interval       = doc["alarm_sensor_interval"]      | 60;
+    alarm_high_temp_interval    = doc["alarm_high_temp_interval"]   | 60;
+    alarm_low_temp_interval     = doc["alarm_low_temp_interval"]    | 60;
+    alarm_high_hum_interval     = doc["alarm_high_hum_interval"]    | 180;
+    alarm_low_hum_interval      = doc["alarm_low_hum_interval"]     | 180;
+    sensor_0_name               = doc["sensor_0_name"]              | "Structor";
+    sensor_1_name               = doc["sensor_1_name"]              | "Nicobarensis";
 
     Serial.println("Настройки загружены:");
-    Serial.print("min_temp_0: ");       Serial.println(min_temp_0);
-    Serial.print("max_temp_0: ");       Serial.println(max_temp_0);
-    Serial.print("min_temp_1: ");       Serial.println(min_temp_1);
-    Serial.print("max_temp_1: ");       Serial.println(max_temp_1);
-    Serial.print("alarm_min_temp_0: "); Serial.println(alarm_min_temp_0);
-    Serial.print("alarm_max_temp_0: "); Serial.println(alarm_max_temp_0);
-    Serial.print("alarm_min_hum_0: ");  Serial.println(alarm_min_hum_0);
-    Serial.print("alarm_max_hum_0: ");  Serial.println(alarm_max_hum_0);
-    Serial.print("alarm_min_temp_1: "); Serial.println(alarm_min_temp_1);
-    Serial.print("alarm_max_temp_1: "); Serial.println(alarm_max_temp_1);
-    Serial.print("alarm_min_hum_1: ");  Serial.println(alarm_min_hum_1);
-    Serial.print("alarm_max_hum_1: ");  Serial.println(alarm_max_hum_1);
-    Serial.print("sensor_0_name: ");    Serial.println(sensor_0_name);
-    Serial.print("sensor_1_name: ");    Serial.println(sensor_1_name);
+    Serial.print("min_temp_0: ");               Serial.println(min_temp_0);
+    Serial.print("max_temp_0: ");               Serial.println(max_temp_0);
+    Serial.print("min_temp_1: ");               Serial.println(min_temp_1);
+    Serial.print("max_temp_1: ");               Serial.println(max_temp_1);
+    Serial.print("alarm_min_temp_0: ");         Serial.println(alarm_min_temp_0);
+    Serial.print("alarm_max_temp_0: ");         Serial.println(alarm_max_temp_0);
+    Serial.print("alarm_min_hum_0: ");          Serial.println(alarm_min_hum_0);
+    Serial.print("alarm_max_hum_0: ");          Serial.println(alarm_max_hum_0);
+    Serial.print("alarm_min_temp_1: ");         Serial.println(alarm_min_temp_1);
+    Serial.print("alarm_max_temp_1: ");         Serial.println(alarm_max_temp_1);
+    Serial.print("alarm_min_hum_1: ");          Serial.println(alarm_min_hum_1);
+    Serial.print("alarm_max_hum_1: ");          Serial.println(alarm_max_hum_1);
+    Serial.print("alarm_all_interval: ");       Serial.println(alarm_all_interval);
+    Serial.print("alarm_sensor_interval: ");    Serial.println(alarm_sensor_interval);
+    Serial.print("alarm_high_temp_interval: "); Serial.println(alarm_high_temp_interval);
+    Serial.print("alarm_low_temp_interval: ");  Serial.println(alarm_low_temp_interval);
+    Serial.print("alarm_high_hum_interval: ");  Serial.println(alarm_high_hum_interval);
+    Serial.print("alarm_low_hum_interval: ");   Serial.println(alarm_low_hum_interval);
+    Serial.print("sensor_0_name: ");            Serial.println(sensor_0_name);
+    Serial.print("sensor_1_name: ");            Serial.println(sensor_1_name);
 }

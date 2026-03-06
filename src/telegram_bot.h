@@ -18,7 +18,7 @@ struct UserState {
 };
 std::map<String, UserState> userStates;
 
-// Escape Markdown (опционально)
+
 String escapeMarkdown(String text) {
     text.replace("_", "\\_");
     text.replace("*", "\\*");
@@ -41,24 +41,25 @@ String escapeMarkdown(String text) {
     return text;
 }
 
-// Keyboards (без resize_keyboard — его нет в библиотеке)
+
 Keyboard getMainKeyboard() {
     Keyboard kb;
-    kb.addButton("🖥️ Статус системы");
+    kb.addButton("Статус системы");
     kb.newRow();
-    kb.addButton("🌡️ Датчики");
+    kb.addButton("Датчики");
     kb.newRow();
-    kb.addButton("⚙️ Управление");
+    kb.addButton("Управление");
+    kb.newRow();
+    kb.addButton("Настройки оповещений");
     return kb;
 }
 
 Keyboard getControlKeyboard() {
     Keyboard kb;
 
-    // Исправленная конкатенация — начинаем с String
-    String r0 = String("🔥 Подогрев у ") + sensor_0_name + ": " + (!relay_0_status ? "🟢" : "🔴");
-    String r1 = String("🔥 Подогрев у ") + sensor_1_name + ": " + (!relay_1_status ? "🟢" : "🔴");
-    String lt = String("💡 Свет: ") + (light_status ? "🟢" : "🔴");
+    String r0 = String("Подогрев у ") + sensor_0_name + ": " + (!relay_0_status ? "🟢" : "🔴");
+    String r1 = String("Подогрев у ") + sensor_1_name + ": " + (!relay_1_status ? "🟢" : "🔴");
+    String lt = String("Свет: ") + (!light_status ? "🟢" : "🔴");
 
     kb.addButton(r0);
     kb.newRow();
@@ -66,30 +67,49 @@ Keyboard getControlKeyboard() {
     kb.newRow();
     kb.addButton(lt);
     kb.newRow();
-    kb.addButton("🔙 Назад");
+    kb.addButton("Назад");
     return kb;
 }
 
 Keyboard getSensorKeyboard() {
     Keyboard kb;
-    kb.addButton(String("🌡️ ") + sensor_0_name);
+    kb.addButton(sensor_0_name);
     kb.newRow();
-    kb.addButton(String("🌡️ ") + sensor_1_name);
+    kb.addButton(sensor_1_name);
     kb.newRow();
-    kb.addButton("🔙 Назад");
+    kb.addButton("Назад");
     return kb;
 }
 
 Keyboard getStatusKeyboard() {
     Keyboard kb;
-    kb.addButton("🔄 Обновить");
+    kb.addButton("Обновить");
     kb.newRow();
-    kb.addButton("🔙 Назад");
+    kb.addButton("Назад");
+    return kb;
+}
+
+// Нужно добавить все действия для этой клавиатуры!!!!
+Keyboard getIntervalKeyboard() {
+    Keyboard kb;
+    kb.addButton("Сброс настроек оповещения");
+    kb.newRow();
+    kb.addButton("Настройка всех оповещений");
+    kb.newRow();
+    kb.addButton("Настройка оповещений по высокой температуре");
+    kb.newRow();
+    kb.addButton("Настройка оповещений по низкой температуре");
+    kb.newRow();
+    kb.addButton("Настройка оповещений по высокой влажности");
+    kb.newRow();
+    kb.addButton("Настройка оповещений по низкой влажности");
+    kb.newRow();
+    kb.addButton("Назад");
     return kb;
 }
 
 void sendStatus(String chat_id) {
-    String status = "🖥️ *Статус системы*\n";
+    String status = "🖥️ Статус системы\n";
     status += "📶 Сигнал: " + String(WiFi.RSSI()) + " dBm\n";
     status += "💽 Память: " + String(ESP.getFreeHeap() / 1024.0, 1) + " KB свободно\n";
     status += "🕒 Аптайм: " + String(millis() / 60000) + " мин\n";
@@ -97,7 +117,7 @@ void sendStatus(String chat_id) {
     status += "🔥 *Подогрев:*\n";
     status += "☀️ " + sensor_0_name + ": " + (relay_0_status == LOW ? "включён" : "выключен") + "\n";
     status += "☀️ " + sensor_1_name + ": " + (relay_1_status == LOW ? "включён" : "выключен") + "\n";
-    status += "💡 *Освещение:*\n";
+    status += "💡 Освещение: ";
     status += "🌟 " + String(light_status == LOW ? "включено" : "выключено") + "\n";
 
     fb::Message m(status, chat_id);
@@ -106,7 +126,25 @@ void sendStatus(String chat_id) {
     bot.sendMessage(m);
 }
 
-// Основной обработчик (с улучшенным парсингом кнопок)
+void sendInterval(String chat_id) {
+    String status = "⏱️ Настройки оповещений\n";
+    status += "Оповещение по датчикам: " + String(alarm_sensor_interval) + " минут\n";
+    status += "Оповещение по высокой температуре: \n";
+    status += String(alarm_high_temp_interval) + " мин\n";
+    status += "Оповещение по низкой температуре: \n";
+    status += String(alarm_low_temp_interval) + " мин\n";
+    status += "Оповещение по высокой влажности: \n";
+    status += String(alarm_high_hum_interval) + " мин\n";
+    status += "Оповещение по низкой  влажности: \n";
+    status += String(alarm_low_hum_interval) + " мин\n";
+
+    fb::Message m(status, chat_id);
+    fb::Keyboard kb = getIntervalKeyboard();
+    m.setKeyboard(&kb);
+    bot.sendMessage(m);
+}
+
+// Основной обработчик
 void handleUpdate(fb::Update& u) {
     if (!u.isMessage()) return;
 
@@ -121,11 +159,18 @@ void handleUpdate(fb::Update& u) {
     lastUpdateID = thisID;
 
     text.trim();
-
-    // Отладка — критически важно!
     Serial.println("Получен текст: [" + text + "] от chatID: " + chatID);
 
-    // Навигация
+    Serial.println("Получен текст: [" + text + "]");
+    Serial.print("Длина: "); Serial.println(text.length());
+    Serial.print("Hex: ");
+    for (unsigned int i = 0; i < text.length(); i++) {
+        Serial.print("0x");
+        Serial.print((uint8_t)text[i], HEX);
+        Serial.print(" ");
+    }
+    Serial.println();
+
     if (text == "/start") {
         fb::Message m("Добро пожаловать!\nВыберите действие:", chatID);
         fb::Keyboard kb = getMainKeyboard();
@@ -134,12 +179,26 @@ void handleUpdate(fb::Update& u) {
         return;
     }
 
-    if (text == "🖥️ Статус системы" || text == "🔄 Обновить" || text == "/status") {
+    if (text == "Статус системы" || text == "Обновить" || text == "/status") {
         sendStatus(chatID);
         return;
     }
 
-    if (text == "🌡️ Датчики" || text == "/sensors") {
+    if (text == "Настройки оповещений" || text == "Оповещения" || text == "/interval") {
+        sendInterval(chatID);
+        return;
+    }
+
+    if (text == "Сброс настроек оповещения" || text == "Сброс" || text == "/Reset settings") {
+        saveDefaults();
+        fb::Message m("Настройки опопвещений сброшены", chatID);
+        fb::Keyboard kb = getIntervalKeyboard();
+        m.setKeyboard(&kb);
+        bot.sendMessage(m);
+        return;
+    }
+
+    if (text == "Датчики" || text == "/sensors") {
         fb::Message m("Выберите датчик:", chatID);
         fb::Keyboard kb = getSensorKeyboard();
         m.setKeyboard(&kb);
@@ -147,7 +206,7 @@ void handleUpdate(fb::Update& u) {
         return;
     }
 
-    if (text == "⚙️ Управление" || text == "/control") {
+    if (text == "Управление" || text == "/control") {
         fb::Message m("Управление устройствами:", chatID);
         fb::Keyboard kb = getControlKeyboard();
         m.setKeyboard(&kb);
@@ -155,7 +214,7 @@ void handleUpdate(fb::Update& u) {
         return;
     }
 
-    if (text == "🔙 Назад" || text == "/back") {
+    if (text == "Назад" || text == "/back") {
         fb::Message m("Главное меню:", chatID);
         fb::Keyboard kb = getMainKeyboard();
         m.setKeyboard(&kb);
@@ -163,43 +222,37 @@ void handleUpdate(fb::Update& u) {
         return;
     }
 
-    // Датчики — парсим после эмодзи
-    if (text.startsWith("🌡️ ")) {
-        String sensorName = text.substring(4);  // всё после "🌡️ "
-        if (sensorName == sensor_0_name) {
-            String m_text = "🐜 Климат у " + sensor_0_name + "\n";
-            m_text += "🌡️ Температура: " + String(last_temp_0, 2) + " °C\n";
-            m_text += "💧 Влажность: " + String(last_hum_0, 2) + " %";
+    if (text == sensor_0_name) {
+        String m_text = "🐜 Климат у " + sensor_0_name + "\n";
+        m_text += "🌡️ Температура: " + String(last_temp_0, 2) + " °C\n";
+        m_text += "💧 Влажность: " + String(last_hum_0, 2) + " %";
 
-            fb::Message m(m_text, chatID);
-            fb::Keyboard kb = getSensorKeyboard();
-            m.setKeyboard(&kb);
-            bot.sendMessage(m);
-            return;
-        }
-        if (sensorName == sensor_1_name) {
-            String m_text = "🐜 Климат у " + sensor_1_name + "\n";
-            m_text += "🌡️ Температура: " + String(last_temp_1, 2) + " °C\n";
-            m_text += "💧 Влажность: " + String(last_hum_1, 2) + " %";
+        fb::Message m(m_text, chatID);
+        fb::Keyboard kb = getSensorKeyboard();
+        m.setKeyboard(&kb);
+        bot.sendMessage(m);
+        return;
+    }
+    if (text == sensor_1_name) {
+        String m_text = "🐜 Климат у " + sensor_1_name + "\n";
+        m_text += "🌡️ Температура: " + String(last_temp_1, 2) + " °C\n";
+        m_text += "💧 Влажность: " + String(last_hum_1, 2) + " %";
 
-            fb::Message m(m_text, chatID);
-            fb::Keyboard kb = getSensorKeyboard();
-            m.setKeyboard(&kb);
-            bot.sendMessage(m);
-            return;
-        }
+        fb::Message m(m_text, chatID);
+        fb::Keyboard kb = getSensorKeyboard();
+        m.setKeyboard(&kb);
+        bot.sendMessage(m);
+        return;
     }
 
-    // Управление — реле (игнорируем статус в конце)
-        // Управление — реле (игнорируем статус в конце)
-    if (text.startsWith("🔥 Подогрев у ")) {
-        String prefix = "🔥 Подогрев у ";
+    // Управление — реле
+    if (text.startsWith("Подогрев у ")) {
+        String prefix = "Подогрев у ";
         String rest = text.substring(prefix.length());
         int colonPos = rest.lastIndexOf(':');
         if (colonPos > 0) {
             String namePart = rest.substring(0, colonPos);
-            namePart.trim();  // ← вот исправление
-
+            namePart.trim();
             if (namePart == sensor_0_name) {
                 relay_0_status = !relay_0_status;
                 digitalWrite(RELAY0_PIN, relay_0_status);
@@ -227,8 +280,7 @@ void handleUpdate(fb::Update& u) {
         }
     }
 
-    // Свет
-    if (text.startsWith("💡 Свет:")) {
+    if (text.startsWith("Свет:")) {
         light_status = !light_status;
         digitalWrite(LIGHT0_PIN, light_status);
         digitalWrite(LIGHT1_PIN, light_status);
@@ -242,7 +294,6 @@ void handleUpdate(fb::Update& u) {
         return;
     }
 
-    // JSON API
     if (text.startsWith("{")) {
         String action; int rid = -1; String state; int sid = -1;
         parseJsonCommand(text, action, rid, state, sid);
