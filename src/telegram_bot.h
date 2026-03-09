@@ -109,11 +109,7 @@ Keyboard getIntervalKeyboard() {
     return kb;
 }
 
-void updateControlKeyboard(String chatID) {
-    fb::Message m("Управление устройствами (обновлено):", chatID);
-    fb::Keyboard kb = getControlKeyboard();
-    m.setKeyboard(&kb);
-}
+
 
 void sendStatus(String chat_id) {
     String status = "🖥️ Статус системы\n";

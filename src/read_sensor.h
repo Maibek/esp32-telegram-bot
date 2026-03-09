@@ -34,10 +34,10 @@ void safe_sensor_read() {
         if (!isnan(hum1)) last_hum_1 = hum1;
 
         // Сохранение не корректных значений
-        if (isnan(temp0)) last_temp_0 = NAN;
-        if (isnan(hum0)) last_hum_0 = NAN;
-        if (isnan(temp1)) last_temp_1 = NAN;
-        if (isnan(hum1)) last_hum_1 = NAN;
+        if (isnan(temp0) || temp0 < -40 || temp0 > 100) last_temp_0 = NAN;
+        if (isnan(hum0) || hum0 < -10  || hum0 > 110) last_hum_0 = NAN;
+        if (isnan(temp1) || temp1 < -40 || temp1 > 100) last_temp_1 = NAN;
+        if (isnan(hum1) || hum1 < -10  || hum1 > 110) last_hum_1 = NAN;
         
         last_sensor_read = millis();
     }

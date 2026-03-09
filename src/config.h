@@ -48,11 +48,11 @@ const unsigned long ALARM_REPEAT_INTERVAL = 10800000;
 unsigned long lastCallbackTime = 0;
 const unsigned long CALLBACK_COOLDOWN = 500;
 // Конвертация времени оповещения милисекунд в минуты
-const unsigned long ERROR_SENSOR_INTERVAL = alarm_sensor_interval * 60000;
-const unsigned long ALARM_HIGH_TEMP_INTERVAL = alarm_high_temp_interval * 60000;
-const unsigned long ALARM_LOW_TEMP_INTERVAL = alarm_low_temp_interval * 60000;
-const unsigned long ALARM_HIGH_HUM_INTERVAL = alarm_high_hum_interval * 60000;
-const unsigned long ALARM_LOW_HUM_INTARVAL = alarm_low_hum_interval * 60000;
+// const unsigned long ERROR_SENSOR_INTERVAL = alarm_sensor_interval * 60000;
+// const unsigned long ALARM_HIGH_TEMP_INTERVAL = alarm_high_temp_interval * 60000;
+// const unsigned long ALARM_LOW_TEMP_INTERVAL = alarm_low_temp_interval * 60000;
+// const unsigned long ALARM_HIGH_HUM_INTERVAL = alarm_high_hum_interval * 60000;
+// const unsigned long ALARM_LOW_HUM_INTARVAL = alarm_low_hum_interval * 60000;
 
 
 // Переменные для пинов датчиков

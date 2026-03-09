@@ -44,7 +44,7 @@ void checkSensors() {
     String key1 = "sensor_error_" + sensor_1_name;
 
     if (isnan(last_temp_0) || isnan(last_hum_0)) {
-        if (notificationThrottler.canSend(key0, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key0, alarm_sensor_interval * 60000)) {
             String message = "🔧 Датчик неисправен у " + sensor_0_name + "\n";
             sendAdminMessage(message);
         }
@@ -54,7 +54,7 @@ void checkSensors() {
     }
 
     if (isnan(last_temp_1) || isnan(last_hum_1)) {
-        if (notificationThrottler.canSend(key1, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key1, ERROR_SENSOR_INTERVAL * 60000)) {
             String message = "🔧 Датчик неисправен у " + sensor_1_name + "\n";
             sendAdminMessage(message);
         }
@@ -72,7 +72,6 @@ void checkHeating() {
         message += "🌡️ Темп. " + sensor_0_name + ": " + String(last_temp_0, 2) + " °C\n";
         message += "🌡️ Темп. " + sensor_1_name + ": " + String(last_temp_1, 2) + " °C\n";
         sendAdminMessage(message);
-        updateControlKeyboard(CHAT_ADMIN);
     }
     else if (digitalRead(RELAY1_PIN) == HIGH && last_temp_1 < min_temp_1) {
         digitalWrite(RELAY1_PIN, LOW);
@@ -80,7 +79,6 @@ void checkHeating() {
         message += "🌡️ Темп. " + sensor_0_name + ": " + String(last_temp_0, 2) + " °C\n";
         message += "🌡️ Темп. " + sensor_1_name + ": " + String(last_temp_1, 2) + " °C\n";
         sendAdminMessage(message);
-        updateControlKeyboard(CHAT_ADMIN);
     }
 
     else if (last_temp_0 >= max_temp_0 && last_temp_1 >= max_temp_1) {
@@ -90,8 +88,6 @@ void checkHeating() {
         message += "🌡️ " + sensor_0_name + ": " + String(last_temp_0, 2) + " °C\n";
         message += "🌡️ " + sensor_1_name + ": " + String(last_temp_1, 2) + " °C\n";
         sendAdminMessage(message);
-        temp_high = false;
-        updateControlKeyboard(CHAT_ADMIN);
     }
 
     else if (digitalRead(RELAY0_PIN) == LOW && last_temp_0 >= max_temp_0) {
@@ -100,7 +96,6 @@ void checkHeating() {
         message += "🌡️ " + sensor_0_name + ": " + String(last_temp_0, 2) + " °C\n";
         message += "🌡️ " + sensor_1_name + ": " + String(last_temp_1, 2) + " °C\n";
         sendAdminMessage(message);
-        updateControlKeyboard(CHAT_ADMIN);
     }
     else if (digitalRead(RELAY1_PIN) == LOW && last_temp_1 >= max_temp_1) {
         digitalWrite(RELAY1_PIN, HIGH);
@@ -108,7 +103,6 @@ void checkHeating() {
         message += "🌡️ " + sensor_0_name + ": " + String(last_temp_0, 2) + " °C\n";
         message += "🌡️ " + sensor_1_name + ": " + String(last_temp_1, 2) + " °C\n";
         sendAdminMessage(message);
-        updateControlKeyboard(CHAT_ADMIN);
     }
 }
 
@@ -117,13 +111,12 @@ void alarm_high_temp() {
     String key1 = "high_temp_" + sensor_1_name;
 
     if (last_temp_0 > alarm_max_temp_0) {
-        if (notificationThrottler.canSend(key0, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key0, alarm_high_temp_interval * 60000)) {
             digitalWrite(RELAY0_PIN, HIGH);
             String message = "⚠️ Тревога! Высокая температура\n";
             message += "🔥 У " + sensor_0_name + "!\n";
             message += "🌡️ Текущая: " + String(last_temp_0, 1) + " °C\n";
             sendAdminMessage(message);
-            updateControlKeyboard(CHAT_ADMIN);
         }
     } 
     else {
@@ -131,13 +124,12 @@ void alarm_high_temp() {
     }
 
     if (last_temp_1 > alarm_max_temp_1) {
-        if (notificationThrottler.canSend(key1, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key1, alarm_high_temp_interval * 60000)) {
             digitalWrite(RELAY1_PIN, HIGH);
             String message = "⚠️ Тревога! Высокая температура\n";
             message += "🔥 У " + sensor_1_name + "!\n";
             message += "🌡️ Текущая: " + String(last_temp_1, 1) + " °C\n";
             sendAdminMessage(message);
-            updateControlKeyboard(CHAT_ADMIN);
         }
     } 
     else {
@@ -150,7 +142,7 @@ void alarm_low_temp() {
     String key1 = "low_temp_" + sensor_1_name;
 
     if (last_temp_0 < alarm_min_temp_0) {
-        if (notificationThrottler.canSend(key0, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key0, alarm_low_temp_interval * 60000)) {
             String message = "⚠️ Тревога! Низкая температура\n";
             message += "❄️ У " + sensor_0_name + "!\n";
             message += "🌡️ Текущая: " + String(last_temp_0, 1) + " °C\n";
@@ -162,7 +154,7 @@ void alarm_low_temp() {
     }
 
     if (last_temp_1 < alarm_min_temp_1) {
-        if (notificationThrottler.canSend(key1, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key1, alarm_low_temp_interval * 60000)) {
             String message = "⚠️ Тревога! Низкая температура\n";
             message += "❄️ У " + sensor_1_name + "!\n";
             message += "🌡️ Текущая: " + String(last_temp_1, 1) + " °C\n";
@@ -179,7 +171,7 @@ void alarm_high_hum() {
     String key1 = "high_hum_" + sensor_1_name;
 
     if (last_hum_0 > alarm_max_hum_0) {
-        if (notificationThrottler.canSend(key0, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key0, alarm_high_hum_interval * 60000)) {
             String message = "⚠️ Тревога! Высокая влажность\n";
             message += "💧 У " + sensor_0_name + "!\n";
             message += "Текущая: " + String(last_hum_0, 1) + " %\n";
@@ -191,7 +183,7 @@ void alarm_high_hum() {
     }
 
     if (last_hum_1 > alarm_max_hum_1) {
-        if (notificationThrottler.canSend(key1, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key1, alarm_high_hum_interval * 60000)) {
             String message = "⚠️ Тревога! Высокая влажность\n";
             message += "💧 У " + sensor_1_name + "!\n";
             message += "Текущая: " + String(last_hum_1, 1) + " %\n";
@@ -208,7 +200,7 @@ void alarm_low_hum() {
     String key1 = "low_hum_" + sensor_1_name;
 
     if (last_hum_0 < alarm_min_hum_0) {
-        if (notificationThrottler.canSend(key0, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key0, alarm_low_hum_interval * 60000)) {
             String message = "⚠️ Тревога! Низкая влажность\n";
             message += "❄️ У " + sensor_0_name + "!\n";
             message += "Текущая: " + String(last_hum_0, 1) + " %\n";
@@ -220,7 +212,7 @@ void alarm_low_hum() {
     }
 
     if (last_hum_1 < alarm_min_hum_1) {
-        if (notificationThrottler.canSend(key1, ERROR_SENSOR_INTERVAL)) {
+        if (notificationThrottler.canSend(key1, alarm_low_hum_interval * 60000)) {
             String message = "⚠️ Тревога! Низкая влажность\n";
             message += "❄️ У " + sensor_1_name + "!\n";
             message += "Текущая: " + String(last_hum_1, 1) + " %\n";
