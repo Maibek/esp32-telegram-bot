@@ -8,6 +8,7 @@
 #include "config.h"
 #include "read_sensor.h"
 #include "api_handler.h"
+#include "settings.h"
 
 using namespace fb;
 
@@ -108,6 +109,12 @@ Keyboard getIntervalKeyboard() {
     return kb;
 }
 
+void updateControlKeyboard(String chatID) {
+    fb::Message m("Управление устройствами (обновлено):", chatID);
+    fb::Keyboard kb = getControlKeyboard();
+    m.setKeyboard(&kb);
+}
+
 void sendStatus(String chat_id) {
     String status = "🖥️ Статус системы\n";
     status += "📶 Сигнал: " + String(WiFi.RSSI()) + " dBm\n";
@@ -191,7 +198,7 @@ void handleUpdate(fb::Update& u) {
 
     if (text == "Сброс настроек оповещения" || text == "Сброс" || text == "/Reset settings") {
         saveDefaults();
-        fb::Message m("Настройки опопвещений сброшены", chatID);
+        fb::Message m("Настройки оповещений сброшены", chatID);
         fb::Keyboard kb = getIntervalKeyboard();
         m.setKeyboard(&kb);
         bot.sendMessage(m);

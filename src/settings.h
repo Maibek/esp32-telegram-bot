@@ -85,7 +85,7 @@ void loadSettings() {
         return;
     }
 
-    // Загрузка значений (с дефолтами на случай отсутствия ключа)
+    // Загрузка значений
     min_temp_0                  = doc["min_temp_0"]                 | 24.0f;
     max_temp_0                  = doc["max_temp_0"]                 | 28.0f;
     min_temp_1                  = doc["min_temp_1"]                 | 26.0f;

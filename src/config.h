@@ -6,7 +6,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-uint8_t temprature_sens_read();  // Объявление функции из SDK
+uint8_t temprature_sens_read();
 #ifdef __cplusplus
 }
 #endif
@@ -44,14 +44,16 @@ float last_hum_1 = NAN;
 unsigned long last_sensor_read = 0;
 unsigned long bot_lasttime = 0;
 const unsigned long BOT_MTBS = 1000;
+const unsigned long ALARM_REPEAT_INTERVAL = 10800000;
+unsigned long lastCallbackTime = 0;
+const unsigned long CALLBACK_COOLDOWN = 500;
+// Конвертация времени оповещения милисекунд в минуты
 const unsigned long ERROR_SENSOR_INTERVAL = alarm_sensor_interval * 60000;
 const unsigned long ALARM_HIGH_TEMP_INTERVAL = alarm_high_temp_interval * 60000;
 const unsigned long ALARM_LOW_TEMP_INTERVAL = alarm_low_temp_interval * 60000;
 const unsigned long ALARM_HIGH_HUM_INTERVAL = alarm_high_hum_interval * 60000;
 const unsigned long ALARM_LOW_HUM_INTARVAL = alarm_low_hum_interval * 60000;
-const unsigned long ALARM_REPEAT_INTERVAL = 10800000; // 2 часа
-unsigned long lastCallbackTime = 0;
-const unsigned long CALLBACK_COOLDOWN = 500; // 0.5 секунды
+
 
 // Переменные для пинов датчиков
 const int SDA0_PIN = 23;
