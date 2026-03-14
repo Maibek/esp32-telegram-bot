@@ -54,7 +54,7 @@ void checkSensors() {
     }
 
     if (isnan(last_temp_1) || isnan(last_hum_1)) {
-        if (notificationThrottler.canSend(key1, ERROR_SENSOR_INTERVAL * 60000)) {
+        if (notificationThrottler.canSend(key1, alarm_sensor_interval * 60000)) {
             String message = "🔧 Датчик неисправен у " + sensor_1_name + "\n";
             sendAdminMessage(message);
         }
